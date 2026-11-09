@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="theme-color" content="#1e1f2e">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>Arrow Escape</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:#1e1f2e;color:#c5cbff;font-family:system-ui,sans-serif}
+  #app{display:flex;flex-direction:column;height:100%}
+  header{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+  select,button,input{background:#3a3f63;color:#c5cbff;border:0;border-radius:10px;padding:9px 14px;font-size:15px}
+  button:active{background:#4b5182}
+  #players{display:flex;gap:10px;justify-content:center}
+  .pl{padding:6px 14px;border-radius:12px;background:#2a2d47;border:2px solid transparent;min-width:120px;text-align:center}
+  .pl.on{border-color:#ff4b5c}
+  .pl b{display:block;font-size:13px;opacity:.8}
+  .hearts{color:#ff4b5c;letter-spacing:2px}
+  #bar{height:8px;background:#2a2d47;border-radius:4px;overflow:hidden}
+  #bar i{display:block;height:100%;width:0;background:#8f98ff;transition:width .2s}
+  #status{text-align:center;min-height:22px;font-weight:600}
+  #roomline{text-align:center;font-size:13px;opacity:.8;min-height:16px}
+  #wrap{flex:1;overflow:auto;display:flex;padding:8px}
+  canvas{margin:auto;touch-action:manipulation}
+  #lobby{position:fixed;inset:0;background:rgba(10,10,20,.85);display:flex;align-items:center;justify-content:center;z-index:5}
+  #lobby[hidden]{display:none}
+  .card{background:#2a2d47;border-radius:16px;padding:20px;width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;text-align:center}
+  .card h3{margin:0}
+  .card input{text-align:center;text-transform:uppercase;letter-spacing:4px;font-size:20px}
+  #lmsg{min-height:20px;font-size:14px;color:#ffb3ba;margin:0}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="row">
+      <select id="diff">
+        <option>Easy</option><option>Medium</option><option selected>Hard</option><option>Nightmare</option>
+      </select>
+      <select id="mode">
+        <option value="1">Solo</option>
+        <option value="2">2 Players (same screen)</option>
+        <option value="online">Online co-op</option>
+      </select>
+      <button id="new">New</button>
+      <button id="hint">Hint</button>
+    </div>
+    <div id="players"></div>
+    <div id="bar"><i></i></div>
+    <div id="status"></div>
+    <div id="roomline"></div>
+  </header>
+  <div id="wrap"><canvas id="c"></canvas></div>
+</div>
+
+<div id="lobby" hidden>
+  <div class="card">
+    <h3>Online co-op</h3>
+    <button id="create">Create room</button>
+    <div>or enter a friend's code</div>
+    <input id="code" maxlength="5" placeholder="CODE" autocapitalize="characters" autocomplete="off">
+    <button id="join">Join room</button>
+    <p id="lmsg"></p>
+    <button id="cancel">Back to solo</button>
+  </div>
+</div>
+
+<script>
+const DIRS = [[0,-1],[0,1],[-1,0],[1,0]];
+const SIZES = {Easy:8, Medium:14, Hard:22, Nightmare:34};
+const $ = id => document.getElementById(id);
+const cv = $('c'), ctx = cv.getContext('2d');
+
+let N, cs, occ, arrows, players, turn, over, total, removed, maxH = 3, hintId = -1, flashes = [], anims = [];
+// online state
+let fb = null, room = null, role = null, team = null, gen = 0, applied = 0, gameBase = '';
+let roomUnsubs = [], gameUnsubs = [];
+
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a>>>15, 1 | a);
+    t = t + Math.imul(t ^ t>>>7, 61 | t) ^ t;
+    return ((t ^ t>>>14) >>> 0) / 4294967296;
+  };
+}
+
+/* ---------- puzzle generation (always solvable) ----------
+   Arrows are placed one by one; each new arrow's exit ray must avoid every
+   arrow already placed. Same seed => same board on every phone. */
+function generate(n, rng = Math.random){
+  const R = m => Math.floor(rng()*m);
+  const o = new Array(n*n).fill(-1), list = [];
+  const free = (x,y) => x>=0 && y>=0 && x<n && y<n && o[y*n+x] === -1;
+  const maxLen = Math.max(4, Math.round(n*0.9));
+  let fails = 0;
+  while (fails < n*n*6){
+    const x = R(n), y = R(n);
+    if (!free(x,y)) { fails++; continue; }
+    const len = 2 + R(maxLen-1);
+    const path = [[x,y]], own = new Set([y*n+x]);
+    let last = null;
+    while (path.length < len){
+      const [cx,cy] = path[path.length-1];
+      let opts = DIRS.filter(d => free(cx+d[0],cy+d[1]) && !own.has((cy+d[1])*n+cx+d[0]));
+      if (!opts.length) break;
+      let d = (last && rng() < 0.6 && opts.includes(last)) ? last : opts[R(opts.length)];
+      last = d;
+      path.push([cx+d[0], cy+d[1]]); own.add((cy+d[1])*n+cx+d[0]);
+    }
+    if (path.length < 2) { fails++; continue; }
+    const [hx,hy] = path[path.length-1], [px,py] = path[path.length-2];
+    const dx = hx-px, dy = hy-py;
+    let cx = hx+dx, cy = hy+dy, ok = true;
+    while (cx>=0 && cy>=0 && cx<n && cy<n){
+      if (o[cy*n+cx] !== -1 || own.has(cy*n+cx)) { ok = false; break; }
+      cx += dx; cy += dy;
+    }
+    if (!ok) { fails++; continue; }
+    const id = list.length;
+    path.forEach(([a,b]) => o[b*n+a] = id);
+    list.push({id, path, dx, dy, alive:true});
+  }
+  return {o, list};
+}
+
+function canExit(a){
+  const [hx,hy] = a.path[a.path.length-1];
+  let x = hx+a.dx, y = hy+a.dy;
+  while (x>=0 && y>=0 && x<N && y<N){
+    const v = occ[y*N+x];
+    if (v !== -1 && v !== a.id) return false;
+    x += a.dx; y += a.dy;
+  }
+  return true;
+}
+
+function loadBoard(g){
+  occ = g.o; arrows = g.list; total = arrows.length; removed = 0;
+  over = false; hintId = -1; flashes = []; anims = [];
+  layout();
+}
+
+function removeArrow(a){
+  a.alive = false;
+  a.path.forEach(([x,y]) => occ[y*N+x] = -1);
+  anims.push({a, t0: performance.now()});
+  removed++;
+}
+
+/* ---------- local game (solo / same screen) ---------- */
+function newGame(){
+  const diff = $('diff').value, m = $('mode').value;
+  if (m === 'online') return;
+  try { localStorage.setItem('arrow-settings', JSON.stringify({diff, mode:m})); } catch(e){}
+  N = SIZES[diff]; maxH = 3;
+  loadBoard(generate(N));
+  const count = +m;
+  players = Array.from({length:count}, (_,i) => ({name: count===1 ? 'You' : 'Player '+(i+1), hearts:3, score:0}));
+  turn = 0; team = null;
+  updateUI();
+  setStatus(count===1 ? 'Tap an arrow to slide it out.' : 'Player 1 starts. Right move = keep your turn. Blocked = lose a heart and the turn passes.');
+}
+
+function layout(){
+  const wrap = $('wrap');
+  const avail = Math.min(wrap.clientWidth-16, wrap.clientHeight-16);
+  cs = Math.max(Math.floor(avail/N), 20);
+  const dpr = window.devicePixelRatio || 1;
+  cv.style.width = cv.style.height = (cs*N)+'px';
+  cv.width = cv.height = cs*N*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function setStatus(t){ $('status').textContent = t; }
+
+function updateUI(){
+  const H = n => '♥'.repeat(Math.max(n,0)) + '♡'.repeat(Math.max(maxH-n,0));
+  if (room && team){
+    const me = role==='h' ? team.h : team.g, fr = role==='h' ? team.g : team.h;
+    $('players').innerHTML = `<div class="pl on"><b>Team · You ${me} · Friend ${fr}</b><span class="hearts">${H(team.hearts)}</span></div>`;
+  } else if (players){
+    $('players').innerHTML = players.map((p,i) =>
+      `<div class="pl ${i===turn && !over ? 'on':''}"><b>${p.name} · ${p.score}</b><span class="hearts">${H(p.hearts)}</span></div>`
+    ).join('');
+  }
+  $('bar').firstElementChild.style.width = (total ? removed/total*100 : 0)+'%';
+}
+
+function nextTurn(){
+  for (let i=1; i<=players.length; i++){
+    const j = (turn+i) % players.length;
+    if (players[j].hearts > 0) { turn = j; return true; }
+  }
+  return false;
+}
+
+function tap(a){
+  if (over) return;
+  if (room) return onlineTap(a);
+  hintId = -1;
+  if (canExit(a)){
+    removeArrow(a);
+    players[turn].score++;
+    if (removed === total) return finish();
+    setStatus(players.length>1 ? players[turn].name+': good, go again.' : '');
+  } else {
+    flashes.push({id:a.id, t0:performance.now()});
+    if (navigator.vibrate) navigator.vibrate(60);
+    players[turn].hearts--;
+    if (players.length === 1){
+      if (players[0].hearts === 0) return finish(true);
+      setStatus('Blocked! Something is in the way.');
+    } else {
+      const was = players[turn].name;
+      if (!nextTurn()) return finish(true);
+      setStatus(was+' hit a blocked arrow. '+players[turn].name+"'s turn.");
+    }
+  }
+  updateUI();
+}
+
+function finish(lost){
+  over = true; updateUI();
+  if (players.length === 1){
+    setStatus(lost ? 'Out of hearts. Tap New to try again.' : 'Cleared! Tap New for another board.');
+  } else {
+    const best = Math.max(...players.map(p=>p.score));
+    const w = players.filter(p=>p.score===best);
+    setStatus(w.length>1 ? "It's a draw! "+best+' each.' : w[0].name+' wins with '+best+' arrows!');
+  }
+}
+
+/* ---------- online co-op (Firebase Realtime Database) ----------
+   Host is the referee: guest taps go to /taps, host decides ok/blocked and
+   writes the result to /events, and both phones apply events in order. */
+async function loadFirebase(){
+  if (fb) return fb;
+  if (!navigator.onLine) throw new Error('You are offline. Online co-op needs internet. Solo still works!');
+  let cfg;
+  try { cfg = (await import('./firebase-config.js')).default; }
+  catch(e){ throw new Error('firebase-config.js is missing.'); }
+  if (!cfg || !cfg.databaseURL || /PASTE/.test(cfg.databaseURL)) throw new Error('Firebase is not set up yet. Fill in firebase-config.js.');
+  const V = 'https://www.gstatic.com/firebasejs/10.14.1/';
+  let app, dbm;
+  try { [app, dbm] = await Promise.all([import(V+'firebase-app.js'), import(V+'firebase-database.js')]); }
+  catch(e){ throw new Error('Could not reach the server. Check your internet.'); }
+  fb = Object.assign({}, dbm, { db: dbm.getDatabase(app.initializeApp(cfg)) });
+  return fb;
+}
+
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const makeCode = () => Array.from({length:5}, () => CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]).join('');
+const newSeed = () => Math.floor(Math.random()*2147483647);
+const lmsg = t => $('lmsg').textContent = t;
+
+async function createRoom(){
+  const f = await loadFirebase();
+  let code = makeCode();
+  for (let i=0; i<5; i++){
+    const s = await f.get(f.ref(f.db, `rooms/${code}/meta`));
+    if (!s.exists()) break;
+    code = makeCode();
+  }
+  await f.set(f.ref(f.db, `rooms/${code}/meta`), {seed:newSeed(), size:SIZES[$('diff').value], gen:1, t:Date.now()});
+  role = 'h'; room = code;
+  enterRoom(f);
+}
+
+async function joinRoom(code){
+  const f = await loadFirebase();
+  const s = await f.get(f.ref(f.db, `rooms/${code}/meta`));
+  if (!s.exists()) throw new Error('Room not found. Check the code.');
+  role = 'g'; room = code;
+  enterRoom(f);
+}
+
+function enterRoom(f){
+  $('lobby').hidden = true;
+  gen = 0; maxH = 5;
+  const pref = f.ref(f.db, `rooms/${room}/players/${role}`);
+  f.set(pref, true); f.onDisconnect(pref).remove();
+  roomUnsubs.push(f.onValue(f.ref(f.db, `rooms/${room}/players`), s => {
+    const p = s.val() || {};
+    const other = role==='h' ? p.g : p.h;
+    $('roomline').textContent = `Room ${room} · ${other ? 'Friend online' : (role==='h' ? 'Share this code, waiting for friend…' : 'Waiting for host…')}`;
+  }));
+  roomUnsubs.push(f.onValue(f.ref(f.db, `rooms/${room}/meta`), s => {
+    const m = s.val();
+    if (!m){ if (room){ setStatus('Room closed.'); leaveToSolo(); } return; }
+    if (m.gen !== gen) startOnline(m);
+  }));
+}
+
+function startOnline(m){
+  const f = fb;
+  gameUnsubs.forEach(u => u()); gameUnsubs = [];
+  gen = m.gen; applied = 0; N = m.size; maxH = 5;
+  team = {hearts:5, h:0, g:0};
+  loadBoard(generate(N, mulberry32(m.seed)));
+  gameBase = `rooms/${room}/games/${gen}`;
+  if (role === 'h'){
+    gameUnsubs.push(f.onChildAdded(f.ref(f.db, gameBase+'/taps'), s => {
+      const t = s.val(); if (t) hostProcess(t.id, t.by);
+    }));
+  }
+  gameUnsubs.push(f.onChildAdded(f.ref(f.db, gameBase+'/events'), s => {
+    const ev = s.val(); if (ev) applyEvent(ev);
+  }));
+  updateUI();
+  setStatus('Co-op! Tap any free arrow. Blocked taps break a shared heart.');
+}
+
+function onlineTap(a){
+  hintId = -1;
+  if (!a.alive) return;
+  if (role === 'h') hostProcess(a.id, 'h');
+  else fb.push(fb.ref(fb.db, gameBase+'/taps'), {id:a.id, by:'g'});
+}
+
+function hostProcess(id, by){
+  if (over) return;
+  const a = arrows[id];
+  if (!a || !a.alive) return;
+  const ev = {n: applied+1, id, ok: canExit(a), by};
+  applyEvent(ev);
+  fb.push(fb.ref(fb.db, gameBase+'/events'), ev);
+}
+
+function applyEvent(ev){
+  if (ev.n <= applied) return;
+  applied = ev.n;
+  const a = arrows[ev.id];
+  if (!a || !a.alive) return;
+  if (ev.ok){
+    removeArrow(a);
+    team[ev.by]++;
+    if (removed === total){
+      over = true; updateUI();
+      const me = role==='h' ? team.h : team.g, fr = role==='h' ? team.g : team.h;
+      return setStatus(`Cleared together! You ${me} · Friend ${fr}. ${role==='h' ? 'Tap New for another board.' : 'Host can start the next one.'}`);
+    }
+  } else {
+    flashes.push({id:a.id, t0:performance.now()});
+    if (navigator.vibrate) navigator.vibrate(60);
+    team.hearts--;
+    if (team.hearts <= 0){
+      over = true; updateUI();
+      return setStatus(`Out of hearts. Cleared ${removed} of ${total}. ${role==='h' ? 'Tap New to retry.' : 'Host can start a new game.'}`);
+    }
+    setStatus('Blocked! A shared heart broke.');
+  }
+  updateUI();
+}
+
+async function restartOnline(){
+  if (role !== 'h') return setStatus('Only the host can start a new game.');
+  const f = fb, old = gen;
+  await f.set(f.ref(f.db, `rooms/${room}/meta`), {seed:newSeed(), size:SIZES[$('diff').value], gen:old+1, t:Date.now()});
+  f.remove(f.ref(f.db, `rooms/${room}/games/${old}`)).catch(()=>{});
+}
+
+function leaveRoom(){
+  roomUnsubs.forEach(u => u()); gameUnsubs.forEach(u => u());
+  roomUnsubs = []; gameUnsubs = [];
+  if (fb && room){
+    try {
+      const f = fb;
+      if (role === 'h') f.remove(f.ref(f.db, `rooms/${room}`)).catch(()=>{});
+      else f.remove(f.ref(f.db, `rooms/${room}/players/${role}`)).catch(()=>{});
+    } catch(e){}
+  }
+  room = null; role = null; team = null; maxH = 3;
+  $('roomline').textContent = '';
+}
+
+function leaveToSolo(){
+  leaveRoom();
+  $('mode').value = '1';
+  newGame();
+}
+
+/* ---------- input ---------- */
+cv.addEventListener('click', e => {
+  if (!arrows) return;
+  const r = cv.getBoundingClientRect();
+  const x = Math.floor((e.clientX-r.left)/cs), y = Math.floor((e.clientY-r.top)/cs);
+  if (x<0||y<0||x>=N||y>=N) return;
+  const id = occ[y*N+x];
+  if (id !== -1) tap(arrows[id]);
+});
+$('new').onclick = () => room ? restartOnline() : newGame();
+$('diff').onchange = () => room ? restartOnline() : newGame();
+$('mode').onchange = () => {
+  if ($('mode').value === 'online'){
+    lmsg(''); $('lobby').hidden = false;
+  } else {
+    leaveRoom(); newGame();
+  }
+};
+$('cancel').onclick = () => { $('lobby').hidden = true; leaveToSolo(); };
+async function lobbyAction(fn, btn){
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Connecting…'; lmsg('');
+  try { await fn(); }
+  catch(e){ lmsg(e.message || 'Something went wrong.'); room = null; role = null; }
+  btn.disabled = false; btn.textContent = label;
+}
+$('create').onclick = () => lobbyAction(createRoom, $('create'));
+$('join').onclick = () => {
+  const code = $('code').value.trim().toUpperCase();
+  if (code.length !== 5) return lmsg('Enter the 5-character code.');
+  lobbyAction(() => joinRoom(code), $('join'));
+};
+$('hint').onclick = () => {
+  if (!arrows) return;
+  const f = arrows.filter(a => a.alive && canExit(a));
+  if (f.length) hintId = f[Math.floor(Math.random()*f.length)].id;
+};
+addEventListener('resize', () => { if (arrows) layout(); });
+
+/* ---------- drawing ---------- */
+function drawArrow(a, color, off, alpha){
+  const w = Math.max(2, cs*0.13), c = cs/2;
+  ctx.globalAlpha = alpha; ctx.strokeStyle = ctx.fillStyle = color;
+  ctx.lineWidth = w; ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.beginPath();
+  a.path.forEach(([x,y],i) => {
+    const px = x*cs+c+a.dx*off*cs, py = y*cs+c+a.dy*off*cs;
+    i ? ctx.lineTo(px,py) : ctx.moveTo(px,py);
+  });
+  ctx.stroke();
+  const [hx,hy] = a.path[a.path.length-1];
+  const px = hx*cs+c+a.dx*off*cs, py = hy*cs+c+a.dy*off*cs;
+  const s = cs*0.34;
+  ctx.beginPath();
+  ctx.moveTo(px+a.dx*s, py+a.dy*s);
+  ctx.lineTo(px-a.dy*s*0.9-a.dx*s*0.2, py+a.dx*s*0.9-a.dy*s*0.2);
+  ctx.lineTo(px+a.dy*s*0.9-a.dx*s*0.2, py-a.dx*s*0.9-a.dy*s*0.2);
+  ctx.closePath(); ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function frame(now){
+  if (arrows){
+    ctx.clearRect(0,0,cs*N,cs*N);
+    flashes = flashes.filter(f => now-f.t0 < 450);
+    anims = anims.filter(an => now-an.t0 < 450);
+    for (const a of arrows){
+      if (!a.alive) continue;
+      const fl = flashes.find(f => f.id === a.id);
+      let color = '#9aa3ff';
+      if (fl) color = '#ff4b5c';
+      else if (a.id === hintId) color = '#5dffb0';
+      drawArrow(a, color, fl ? Math.sin((now-fl.t0)/40)*0.08 : 0, 1);
+    }
+    for (const an of anims){
+      const t = (now-an.t0)/450, e = t*t;
+      drawArrow(an.a, '#9aa3ff', e*(N+an.a.path.length), 1-t);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- boot ---------- */
+try {
+  const s = JSON.parse(localStorage.getItem('arrow-settings'));
+  if (s){ $('diff').value = s.diff; $('mode').value = (s.mode === '1' || s.mode === '2') ? s.mode : '1'; }
+} catch(e){}
+newGame();
+requestAnimationFrame(frame);
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
