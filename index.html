@@ -32,6 +32,7 @@
   .card h3{margin:0}
   .card input{text-align:center;text-transform:uppercase;letter-spacing:4px;font-size:20px}
   #lmsg{min-height:20px;font-size:14px;color:#ffb3ba;margin:0}
+  #flash{position:fixed;inset:0;background:#ff4b5c;opacity:0;pointer-events:none;z-index:4}
 </style>
 </head>
 <body>
@@ -68,6 +69,8 @@
     <button id="cancel">Back to solo</button>
   </div>
 </div>
+
+<div id="flash"></div>
 
 <script>
 const DIRS = [[0,-1],[0,1],[-1,0],[1,0]];
@@ -145,11 +148,35 @@ function loadBoard(g){
   layout();
 }
 
-function removeArrow(a){
+function removeArrow(a, delay = 0){
   a.alive = false;
   a.path.forEach(([x,y]) => occ[y*N+x] = -1);
-  anims.push({a, t0: performance.now()});
+  const total = (a.path.length - 1) + N + 1;       // cells the tail must travel to be fully out
+  anims.push({a, t0: performance.now() + delay, dur: 250 + total*14, total, red: !!a.red});
   removed++;
+}
+
+// A blocked arrow stays red. After every board change, any red arrow whose way is now
+// clear leaves by itself (chains cascade). Deterministic, so online phones agree.
+function sweepRed(credit){
+  let step = 0, any = true;
+  while (any){
+    any = false;
+    for (const a of arrows){
+      if (a.alive && a.red && canExit(a)){
+        removeArrow(a, step*130);
+        credit(a);
+        any = true;
+      }
+    }
+    step++;
+  }
+}
+
+function flashScreen(){
+  const f = $('flash');
+  f.style.transition = 'none'; f.style.opacity = '.22';
+  requestAnimationFrame(() => requestAnimationFrame(() => { f.style.transition = 'opacity .45s'; f.style.opacity = '0'; }));
 }
 
 /* ---------- local game (solo / same screen) ---------- */
@@ -203,18 +230,22 @@ function tap(a){
   if (over) return;
   if (room) return onlineTap(a);
   hintId = -1;
+  if (a.red) return;                       // already blocked, waiting for its way to clear
   if (canExit(a)){
     removeArrow(a);
     players[turn].score++;
+    sweepRed(b => players[b.by].score++);
     if (removed === total) return finish();
     setStatus(players.length>1 ? players[turn].name+': good, go again.' : '');
   } else {
+    a.red = true; a.by = turn;
     flashes.push({id:a.id, t0:performance.now()});
+    flashScreen();
     if (navigator.vibrate) navigator.vibrate(60);
     players[turn].hearts--;
     if (players.length === 1){
       if (players[0].hearts === 0) return finish(true);
-      setStatus('Blocked! Something is in the way.');
+      setStatus('Blocked! It stays red and leaves by itself once its way is clear.');
     } else {
       const was = players[turn].name;
       if (!nextTurn()) return finish(true);
@@ -317,7 +348,7 @@ function startOnline(m){
 
 function onlineTap(a){
   hintId = -1;
-  if (!a.alive) return;
+  if (!a.alive || a.red) return;
   if (role === 'h') hostProcess(a.id, 'h');
   else fb.push(fb.ref(fb.db, gameBase+'/taps'), {id:a.id, by:'g'});
 }
@@ -325,7 +356,7 @@ function onlineTap(a){
 function hostProcess(id, by){
   if (over) return;
   const a = arrows[id];
-  if (!a || !a.alive) return;
+  if (!a || !a.alive || a.red) return;
   const ev = {n: applied+1, id, ok: canExit(a), by};
   applyEvent(ev);
   fb.push(fb.ref(fb.db, gameBase+'/events'), ev);
@@ -339,20 +370,24 @@ function applyEvent(ev){
   if (ev.ok){
     removeArrow(a);
     team[ev.by]++;
+    sweepRed(b => team[b.by]++);
     if (removed === total){
       over = true; updateUI();
       const me = role==='h' ? team.h : team.g, fr = role==='h' ? team.g : team.h;
       return setStatus(`Cleared together! You ${me} · Friend ${fr}. ${role==='h' ? 'Tap New for another board.' : 'Host can start the next one.'}`);
     }
   } else {
+    if (a.red) return;
+    a.red = true; a.by = ev.by;
     flashes.push({id:a.id, t0:performance.now()});
+    flashScreen();
     if (navigator.vibrate) navigator.vibrate(60);
     team.hearts--;
     if (team.hearts <= 0){
       over = true; updateUI();
       return setStatus(`Out of hearts. Cleared ${removed} of ${total}. ${role==='h' ? 'Tap New to retry.' : 'Host can start a new game.'}`);
     }
-    setStatus('Blocked! A shared heart broke.');
+    setStatus('Blocked! A shared heart broke. The red arrow leaves once its way is clear.');
   }
   updateUI();
 }
@@ -424,43 +459,57 @@ $('hint').onclick = () => {
 addEventListener('resize', () => { if (arrows) layout(); });
 
 /* ---------- drawing ---------- */
-function drawArrow(a, color, off, alpha){
-  const w = Math.max(2, cs*0.13), c = cs/2;
-  ctx.globalAlpha = alpha; ctx.strokeStyle = ctx.fillStyle = color;
+const RED = '#ff4b5c', BLUE = '#9aa3ff', GREEN = '#5dffb0';
+const cellPts = a => a.path.map(([x,y]) => [x+0.5, y+0.5]);
+
+function strokePoly(pts, dx, dy, color){
+  const w = Math.max(2, cs*0.13);
+  ctx.strokeStyle = ctx.fillStyle = color;
   ctx.lineWidth = w; ctx.lineJoin = ctx.lineCap = 'round';
   ctx.beginPath();
-  a.path.forEach(([x,y],i) => {
-    const px = x*cs+c+a.dx*off*cs, py = y*cs+c+a.dy*off*cs;
-    i ? ctx.lineTo(px,py) : ctx.moveTo(px,py);
-  });
+  pts.forEach(([x,y],i) => i ? ctx.lineTo(x*cs,y*cs) : ctx.moveTo(x*cs,y*cs));
   ctx.stroke();
-  const [hx,hy] = a.path[a.path.length-1];
-  const px = hx*cs+c+a.dx*off*cs, py = hy*cs+c+a.dy*off*cs;
-  const s = cs*0.34;
+  const px = pts[pts.length-1][0]*cs, py = pts[pts.length-1][1]*cs, s = cs*0.34;
   ctx.beginPath();
-  ctx.moveTo(px+a.dx*s, py+a.dy*s);
-  ctx.lineTo(px-a.dy*s*0.9-a.dx*s*0.2, py+a.dx*s*0.9-a.dy*s*0.2);
-  ctx.lineTo(px+a.dy*s*0.9-a.dx*s*0.2, py-a.dx*s*0.9-a.dy*s*0.2);
+  ctx.moveTo(px+dx*s, py+dy*s);
+  ctx.lineTo(px-dy*s*0.9-dx*s*0.2, py+dx*s*0.9-dy*s*0.2);
+  ctx.lineTo(px+dy*s*0.9-dx*s*0.2, py-dx*s*0.9-dy*s*0.2);
   ctx.closePath(); ctx.fill();
-  ctx.globalAlpha = 1;
+}
+
+function drawArrow(a, color, off){
+  strokePoly(cellPts(a).map(([x,y]) => [x+a.dx*off, y+a.dy*off]), a.dx, a.dy, color);
+}
+
+// Snake exit: the head leaves straight in its pointing direction and the body follows
+// the arrow's own path through every bend. s = how far the tail has travelled (in cells).
+function snakePts(a, s){
+  const base = cellPts(a), k = base.length - 1, hx = base[k][0], hy = base[k][1];
+  const at = u => {
+    if (u >= k) return [hx + a.dx*(u-k), hy + a.dy*(u-k)];
+    const i = Math.floor(u), f = u - i;
+    return [base[i][0] + (base[i+1][0]-base[i][0])*f, base[i][1] + (base[i+1][1]-base[i][1])*f];
+  };
+  const out = [at(s)];
+  for (let i = 1; i <= k; i++) if (i > s && i < s+k) out.push(base[i]);
+  out.push(at(s+k));
+  return out;
 }
 
 function frame(now){
   if (arrows){
     ctx.clearRect(0,0,cs*N,cs*N);
     flashes = flashes.filter(f => now-f.t0 < 450);
-    anims = anims.filter(an => now-an.t0 < 450);
+    anims = anims.filter(an => now-an.t0 < an.dur);
     for (const a of arrows){
       if (!a.alive) continue;
       const fl = flashes.find(f => f.id === a.id);
-      let color = '#9aa3ff';
-      if (fl) color = '#ff4b5c';
-      else if (a.id === hintId) color = '#5dffb0';
-      drawArrow(a, color, fl ? Math.sin((now-fl.t0)/40)*0.08 : 0, 1);
+      const color = a.red ? RED : (a.id === hintId ? GREEN : BLUE);
+      drawArrow(a, color, fl ? Math.sin((now-fl.t0)/40)*0.08 : 0);
     }
     for (const an of anims){
-      const t = (now-an.t0)/450, e = t*t;
-      drawArrow(an.a, '#9aa3ff', e*(N+an.a.path.length), 1-t);
+      const t = Math.min(1, Math.max(0, (now-an.t0)/an.dur));
+      strokePoly(snakePts(an.a, an.total*Math.pow(t,1.5)), an.a.dx, an.a.dy, an.red ? RED : BLUE);
     }
   }
   requestAnimationFrame(frame);
