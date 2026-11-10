@@ -24,10 +24,16 @@
   #bar i{display:block;height:100%;width:0;background:#8f98ff;transition:width .2s}
   #status{text-align:center;min-height:22px;font-weight:600}
   #roomline{text-align:center;font-size:13px;opacity:.8;min-height:16px}
-  #wrap{flex:1;overflow:auto;display:flex;padding:8px}
-  canvas{margin:auto;touch-action:manipulation}
-  #lobby{position:fixed;inset:0;background:rgba(10,10,20,.85);display:flex;align-items:center;justify-content:center;z-index:5}
-  #lobby[hidden]{display:none}
+  #wrap{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+  canvas{display:block;touch-action:none}
+  #lobby,#picker{position:fixed;inset:0;background:rgba(10,10,20,.85);display:flex;align-items:center;justify-content:center;z-index:5}
+  #lobby[hidden],#picker[hidden]{display:none}
+  #popts{display:flex;flex-direction:column;gap:10px}
+  .opt{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;padding:12px 14px;border:2px solid transparent;font-size:17px}
+  .opt small{font-size:12px;opacity:.7}
+  .opt.on{border-color:#8f98ff;background:#454b78}
+  .pill{min-width:104px}
+  .pill::after{content:' \25BE';opacity:.7}
   .card{background:#2a2d47;border-radius:16px;padding:20px;width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;text-align:center}
   .card h3{margin:0}
   .card input{text-align:center;text-transform:uppercase;letter-spacing:4px;font-size:20px}
@@ -39,16 +45,18 @@
 <div id="app">
   <header>
     <div class="row">
-      <select id="diff">
+      <button id="diffBtn" class="pill"></button>
+      <button id="modeBtn" class="pill"></button>
+      <button id="new">New</button>
+      <button id="hint">Hint</button>
+      <select id="diff" hidden>
         <option>Easy</option><option>Medium</option><option selected>Hard</option><option>Nightmare</option>
       </select>
-      <select id="mode">
+      <select id="mode" hidden>
         <option value="1">Solo</option>
         <option value="2">2 Players (same screen)</option>
         <option value="online">Online co-op</option>
       </select>
-      <button id="new">New</button>
-      <button id="hint">Hint</button>
     </div>
     <div id="players"></div>
     <div id="bar"><i></i></div>
@@ -67,6 +75,14 @@
     <button id="join">Join room</button>
     <p id="lmsg"></p>
     <button id="cancel">Back to solo</button>
+  </div>
+</div>
+
+<div id="picker" hidden>
+  <div class="card">
+    <h3 id="ptitle"></h3>
+    <div id="popts"></div>
+    <button id="pcancel">Close</button>
   </div>
 </div>
 
@@ -182,6 +198,7 @@ function flashScreen(){
 /* ---------- local game (solo / same screen) ---------- */
 function newGame(){
   const diff = $('diff').value, m = $('mode').value;
+  refreshPills();
   if (m === 'online') return;
   try { localStorage.setItem('arrow-settings', JSON.stringify({diff, mode:m})); } catch(e){}
   N = SIZES[diff]; maxH = 3;
@@ -193,14 +210,32 @@ function newGame(){
   setStatus(count===1 ? 'Tap an arrow to slide it out.' : 'Player 1 starts. Right move = keep your turn. Blocked = lose a heart and the turn passes.');
 }
 
-function layout(){
+/* ---------- view: fit to screen, zoom and pan ---------- */
+let view = {s:1, ox:0, oy:0}, W = 0, H = 0, DPR = 1;
+const maxScale = () => Math.max(3, 70/cs);
+
+function clampView(){
+  const size = N*cs*view.s;
+  view.ox = size <= W ? (W-size)/2 : Math.min(0, Math.max(W-size, view.ox));
+  view.oy = size <= H ? (H-size)/2 : Math.min(0, Math.max(H-size, view.oy));
+}
+
+function layout(reset = true){
   const wrap = $('wrap');
-  const avail = Math.min(wrap.clientWidth-16, wrap.clientHeight-16);
-  cs = Math.max(Math.floor(avail/N), 20);
-  const dpr = window.devicePixelRatio || 1;
-  cv.style.width = cv.style.height = (cs*N)+'px';
-  cv.width = cv.height = cs*N*dpr;
-  ctx.setTransform(dpr,0,0,dpr,0,0);
+  W = wrap.clientWidth || 300; H = wrap.clientHeight || 300;
+  DPR = window.devicePixelRatio || 1;
+  cv.style.width = W+'px'; cv.style.height = H+'px';
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  cs = Math.max((Math.min(W,H) - 12) / N, 4);        // whole board fits any screen
+  view.s = reset ? 1 : Math.min(maxScale(), Math.max(1, view.s));
+  clampView();
+}
+
+function zoomAt(cx, cy, ns){
+  ns = Math.min(maxScale(), Math.max(1, ns));
+  const wx = (cx - view.ox)/(view.s*cs), wy = (cy - view.oy)/(view.s*cs);
+  view.s = ns; view.ox = cx - wx*ns*cs; view.oy = cy - wy*ns*cs;
+  clampView();
 }
 
 function setStatus(t){ $('status').textContent = t; }
@@ -420,14 +455,102 @@ function leaveToSolo(){
 }
 
 /* ---------- input ---------- */
-cv.addEventListener('click', e => {
+let lastEmpty = null;
+function handleTap(px, py){
   if (!arrows) return;
-  const r = cv.getBoundingClientRect();
-  const x = Math.floor((e.clientX-r.left)/cs), y = Math.floor((e.clientY-r.top)/cs);
-  if (x<0||y<0||x>=N||y>=N) return;
-  const id = occ[y*N+x];
-  if (id !== -1) tap(arrows[id]);
+  const wx = (px - view.ox)/(view.s*cs), wy = (py - view.oy)/(view.s*cs);
+  const ci = Math.floor(wx), cj = Math.floor(wy);
+  let id = (ci>=0 && cj>=0 && ci<N && cj<N) ? occ[cj*N+ci] : -1;
+  if (id === -1){                                   // forgiving taps: nearest line within finger reach
+    const tol = Math.max(0.5, Math.min(0.9, 22/(view.s*cs)));
+    let bd = 1e9;
+    for (let j=cj-1; j<=cj+1; j++) for (let i=ci-1; i<=ci+1; i++){
+      if (i<0||j<0||i>=N||j>=N || occ[j*N+i] === -1) continue;
+      const d = Math.hypot(wx-(i+0.5), wy-(j+0.5));
+      if (d < bd && d <= tol){ bd = d; id = occ[j*N+i]; }
+    }
+  }
+  if (id === -1){                                   // double-tap empty space: zoom in / back to fit
+    const now = performance.now();
+    if (lastEmpty && now-lastEmpty.t < 350 && Math.hypot(px-lastEmpty.x, py-lastEmpty.y) < 40){
+      if (view.s > 1.05){ view.s = 1; clampView(); } else zoomAt(px, py, Math.min(maxScale(), 2.6));
+      lastEmpty = null;
+    } else lastEmpty = {t:now, x:px, y:py};
+    return;
+  }
+  tap(arrows[id]);
+}
+
+const ptrs = new Map(); let gest = null;
+const local = e => { const r = cv.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; };
+const pair = () => { const [a,b] = [...ptrs.values()]; return {d: Math.hypot(a.x-b.x, a.y-b.y) || 1, m: {x:(a.x+b.x)/2, y:(a.y+b.y)/2}}; };
+
+cv.addEventListener('pointerdown', e => {
+  try { cv.setPointerCapture(e.pointerId); } catch(_){}
+  const p = local(e); ptrs.set(e.pointerId, p);
+  if (ptrs.size === 1) gest = {moved:false, t:performance.now(), sx:p.x, sy:p.y};
+  else if (ptrs.size === 2){ gest = gest || {t:performance.now(), sx:p.x, sy:p.y}; gest.moved = true; Object.assign(gest, pair()); }
 });
+cv.addEventListener('pointermove', e => {
+  const prev = ptrs.get(e.pointerId); if (!prev) return;
+  const p = local(e);
+  if (ptrs.size === 1 && gest){
+    if (!gest.moved && Math.hypot(p.x-gest.sx, p.y-gest.sy) > 8) gest.moved = true;
+    if (gest.moved){ view.ox += p.x-prev.x; view.oy += p.y-prev.y; clampView(); }
+    ptrs.set(e.pointerId, p);
+  } else if (ptrs.size === 2 && gest){
+    ptrs.set(e.pointerId, p);
+    const {d, m} = pair();
+    const ns = Math.min(maxScale(), Math.max(1, view.s * d/gest.d));
+    const wx = (gest.m.x - view.ox)/(view.s*cs), wy = (gest.m.y - view.oy)/(view.s*cs);
+    view.s = ns; view.ox = m.x - wx*ns*cs; view.oy = m.y - wy*ns*cs; clampView();
+    gest.d = d; gest.m = m;
+  }
+});
+function endPtr(e, cancelled){
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  const isTap = !cancelled && gest && !gest.moved && ptrs.size === 1 && performance.now()-gest.t < 600;
+  ptrs.delete(e.pointerId);
+  if (isTap) handleTap(p.x, p.y);
+  if (ptrs.size === 0) gest = null;
+  else if (gest) gest.moved = true;                  // finger left after a pinch: never counts as a tap
+}
+cv.addEventListener('pointerup', e => endPtr(e, false));
+cv.addEventListener('pointercancel', e => endPtr(e, true));
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  const p = local(e);
+  zoomAt(p.x, p.y, view.s * (e.deltaY < 0 ? 1.15 : 1/1.15));
+}, {passive:false});
+/* ---------- card menus for mode / difficulty ---------- */
+const MODES = [['1','Solo','Play on your own · 3 hearts'], ['2','2 Players','Same screen · take turns'], ['online','Online co-op','Play with a friend · 5 shared hearts']];
+const DIFFS = [['Easy','8 × 8 board'], ['Medium','14 × 14 board'], ['Hard','22 × 22 board'], ['Nightmare','34 × 34 board']];
+function refreshPills(){
+  $('diffBtn').textContent = $('diff').value;
+  $('modeBtn').textContent = (MODES.find(m => m[0] === $('mode').value) || MODES[0])[1];
+}
+function openPicker(kind){
+  const list = kind === 'mode' ? MODES : DIFFS, cur = $(kind).value;
+  $('ptitle').textContent = kind === 'mode' ? 'Game mode' : 'Difficulty';
+  $('popts').innerHTML = '';
+  for (const [val, name, sub] of list){
+    const b = document.createElement('button');
+    b.className = 'opt' + (val === cur ? ' on' : '');
+    b.innerHTML = '<b></b><small></small>';
+    b.firstChild.textContent = name; b.lastChild.textContent = sub;
+    b.onclick = () => {
+      $('picker').hidden = true;
+      if (val === cur) return;
+      $(kind).value = val; refreshPills(); $(kind).onchange();
+    };
+    $('popts').appendChild(b);
+  }
+  $('picker').hidden = false;
+}
+$('diffBtn').onclick = () => openPicker('diff');
+$('modeBtn').onclick = () => openPicker('mode');
+$('pcancel').onclick = () => { $('picker').hidden = true; };
+$('picker').onclick = e => { if (e.target === $('picker')) $('picker').hidden = true; };
 $('new').onclick = () => room ? restartOnline() : newGame();
 $('diff').onchange = () => room ? restartOnline() : newGame();
 $('mode').onchange = () => {
@@ -456,7 +579,7 @@ $('hint').onclick = () => {
   const f = arrows.filter(a => a.alive && canExit(a));
   if (f.length) hintId = f[Math.floor(Math.random()*f.length)].id;
 };
-addEventListener('resize', () => { if (arrows) layout(); });
+addEventListener('resize', () => { if (arrows) layout(false); });
 
 /* ---------- drawing ---------- */
 const RED = '#ff4b5c', BLUE = '#9aa3ff', GREEN = '#5dffb0';
@@ -498,7 +621,10 @@ function snakePts(a, s){
 
 function frame(now){
   if (arrows){
-    ctx.clearRect(0,0,cs*N,cs*N);
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.setTransform(DPR*view.s,0,0,DPR*view.s,DPR*view.ox,DPR*view.oy);
+    ctx.strokeStyle = '#2a2d47'; ctx.lineWidth = 1.5/view.s; ctx.strokeRect(0,0,N*cs,N*cs);
     flashes = flashes.filter(f => now-f.t0 < 450);
     anims = anims.filter(an => now-an.t0 < an.dur);
     for (const a of arrows){
