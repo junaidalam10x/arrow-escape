@@ -1,4 +1,4 @@
-const CACHE = 'arrow-escape-v14';
+const CACHE = 'arrow-escape-v15';
 const FILES = ['./', 'index.html', 'manifest.json', 'icon.svg', 'firebase-config.js'];
 
 self.addEventListener('install', e => {

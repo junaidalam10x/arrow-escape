@@ -99,7 +99,6 @@
       </select>
       <select id="mode" hidden>
         <option value="1">Solo</option>
-        <option value="2">2 Players (same screen)</option>
         <option value="online">Online co-op</option>
       </select>
     </div>
@@ -153,12 +152,11 @@
   <div class="homebox">
     <img class="logo" src="icon.svg" alt="">
     <h1>Arrow Escape</h1>
-    <p></p>
+    <p>Slide every arrow out. Don't tap a blocked one.</p>
     <div class="hlabel">Difficulty</div>
     <div class="chips" id="hchips"></div>
     <div class="hlabel">Play</div>
     <button class="big" data-m="1">Solo<small>Play on your own</small></button>
-    <button class="big" data-m="2">2 Players<small>Same screen, take turns</small></button>
     <button class="big" data-m="online">Online co-op<small>Play with a friend</small></button>
   </div>
 </div>
@@ -828,7 +826,7 @@ cv.addEventListener('wheel', e => {
   zoomAt(p.x, p.y, view.s * (e.deltaY < 0 ? 1.15 : 1/1.15));
 }, {passive:false});
 /* ---------- card menus for mode / difficulty ---------- */
-const MODES = [['1','Solo','Play on your own · 3 hearts'], ['2','2 Players','Same screen · take turns'], ['online','Online co-op','Play with a friend · 5 shared hearts']];
+const MODES = [['1','Solo','Play on your own · 3 hearts'], ['online','Online co-op','Play with a friend · 5 shared hearts']];
 const DIFFS = [['Easy','Easy',''], ['Medium','Medium',''], ['Hard','Hard',''], ['Nightmare','Nightmare','']];
 function refreshPills(){
   $('diffBtn').textContent = $('diff').value;
@@ -964,7 +962,7 @@ function frame(now){
 /* ---------- boot ---------- */
 try {
   const s = JSON.parse(localStorage.getItem('arrow-settings'));
-  if (s){ $('diff').value = s.diff; $('mode').value = (s.mode === '1' || s.mode === '2') ? s.mode : '1'; }
+  if (s){ $('diff').value = s.diff; $('mode').value = s.mode === '1' ? '1' : '1'; }
 } catch(e){}
 newGame();
 requestAnimationFrame(frame);
