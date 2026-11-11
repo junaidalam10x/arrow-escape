@@ -111,7 +111,7 @@ function mulberry32(a){
 /* ---------- puzzle generation (always solvable) ----------
    Arrows are placed one by one; each new arrow's exit ray must avoid every
    arrow already placed. Same seed => same board on every phone. */
-function generate(n, rng = Math.random){
+function genClassic(n, rng = Math.random){
   const R = m => Math.floor(rng()*m);
   const o = new Array(n*n).fill(-1), list = [];
   const free = (x,y) => x>=0 && y>=0 && x<n && y<n && o[y*n+x] === -1;
@@ -145,6 +145,121 @@ function generate(n, rng = Math.random){
     list.push({id, path, dx, dy, alive:true});
   }
   return {o, list};
+}
+
+/* ---------- harder boards (Hard, Nightmare) ----------
+   The grid is covered with many short snakes, a head end is chosen for each (favouring long
+   rays that cross lots of other arrows), then the board is "peeled" exactly the way a player
+   would clear it. Any arrow that could never get out is turned around, or removed.
+   Result: few arrows are free at the start and the escape order is a long chain.
+   Only rng() is used (no sort(), no Math.random), so both phones build the identical board. */
+const HARD = {
+  Hard:      {minLen:2, maxLen:6, straight:0.45, longBias:0.9, refill:2},
+  Nightmare: {minLen:2, maxLen:6, straight:0.40, longBias:0.9, refill:2}
+};
+
+function genDense(n, rng, cfg){
+  const R = m => Math.floor(rng()*m);
+  const own = new Array(n*n).fill(-1), all = [];
+  const inb = (x,y) => x>=0 && y>=0 && x<n && y<n;
+  const setDir = a => {
+    const k = a.path.length;
+    a.dx = a.path[k-1][0] - a.path[k-2][0]; a.dy = a.path[k-1][1] - a.path[k-2][1];
+  };
+  const rayLen = a => {
+    let c = 0, x = a.path[a.path.length-1][0] + a.dx, y = a.path[a.path.length-1][1] + a.dy;
+    while (inb(x,y)){ c++; x += a.dx; y += a.dy; }
+    return c;
+  };
+  const shuffle = arr => { for (let i = arr.length-1; i > 0; i--){ const j = R(i+1), t = arr[i]; arr[i] = arr[j]; arr[j] = t; } };
+
+  function cover(){                                       // fill every empty cell with short snakes
+    const empty = [];
+    for (let i = 0; i < n*n; i++) if (own[i] === -1) empty.push(i);
+    shuffle(empty);
+    for (const idx of empty){
+      if (own[idx] !== -1) continue;
+      const L = cfg.minLen + R(cfg.maxLen - cfg.minLen + 1);
+      const path = [[idx % n, Math.floor(idx / n)]]; own[idx] = -2;
+      let last = null;
+      while (path.length < L){
+        const cx = path[path.length-1][0], cy = path[path.length-1][1];
+        const opts = DIRS.filter(d => inb(cx+d[0], cy+d[1]) && own[(cy+d[1])*n + cx+d[0]] === -1);
+        if (!opts.length) break;
+        const d = (last && opts.includes(last) && rng() < cfg.straight) ? last : opts[R(opts.length)];
+        last = d; path.push([cx+d[0], cy+d[1]]); own[(cy+d[1])*n + cx+d[0]] = -2;
+      }
+      if (path.length >= 2){
+        const a = {id:all.length, path, dx:0, dy:0, alive:true, fresh:true};
+        all.push(a); path.forEach(([x,y]) => own[y*n+x] = a.id);
+        continue;
+      }
+      own[idx] = -1;                                      // lonely cell: glue onto a neighbouring arrow's end, else leave empty
+      const x = path[0][0], y = path[0][1];
+      for (const d of DIRS){
+        const nx = x+d[0], ny = y+d[1]; if (!inb(nx,ny)) continue;
+        const q = own[ny*n+nx]; if (q < 0) continue;
+        const P = all[q].path, e = P[P.length-1], f = P[0];
+        if (e[0] === nx && e[1] === ny){ P.push([x,y]); own[idx] = q; break; }
+        if (f[0] === nx && f[1] === ny){ P.unshift([x,y]); own[idx] = q; break; }
+      }
+    }
+  }
+
+  function orient(a){                                     // pick which end is the head
+    setDir(a); const r1 = rayLen(a);
+    a.path.reverse(); setDir(a); const r2 = rayLen(a);
+    const revert = (rng() < cfg.longBias) ? r2 < r1 : rng() < 0.5;
+    if (revert){ a.path.reverse(); setDir(a); }
+    a.fresh = false;
+  }
+
+  function solve(){                                       // peel like a player; fix whatever can never leave
+    const occ = own.slice();
+    const exits = a => {
+      let x = a.path[a.path.length-1][0] + a.dx, y = a.path[a.path.length-1][1] + a.dy;
+      while (inb(x,y)){ const v = occ[y*n+x]; if (v !== -1 && v !== a.id) return false; x += a.dx; y += a.dy; }
+      return true;
+    };
+    const clear = a => a.path.forEach(([x,y]) => occ[y*n+x] = -1);
+    let left = all.filter(a => a.alive);
+    while (left.length){
+      let progress = true;
+      while (progress){
+        progress = false;
+        const rest = [];
+        for (const a of left){ if (exits(a)){ clear(a); progress = true; } else rest.push(a); }
+        left = rest;
+      }
+      if (!left.length) break;
+      shuffle(left);
+      let fixed = false;
+      for (const a of left){                              // turning an arrow around never changes what blocks others
+        a.path.reverse(); setDir(a);
+        if (exits(a)){ fixed = true; break; }
+        a.path.reverse(); setDir(a);
+      }
+      if (!fixed){
+        const a = left[0];                                // stuck for good: remove it
+        a.alive = false; clear(a); a.path.forEach(([x,y]) => own[y*n+x] = -1);
+        left = left.slice(1);
+      }
+    }
+  }
+
+  for (let round = 0; round <= cfg.refill; round++){     // later rounds refill the holes left by removed arrows
+    cover();
+    for (const a of all) if (a.alive){ if (a.fresh) orient(a); else setDir(a); }
+    solve();
+  }
+  const list = all.filter(a => a.alive).map((a,i) => ({id:i, path:a.path, dx:a.dx, dy:a.dy, alive:true}));
+  const o = new Array(n*n).fill(-1);
+  list.forEach(a => a.path.forEach(([x,y]) => o[y*n+x] = a.id));
+  return {o, list};
+}
+
+function generate(n, rng = Math.random, lvl = 'Easy'){
+  return HARD[lvl] ? genDense(n, rng, HARD[lvl]) : genClassic(n, rng);
 }
 
 function canExit(a){
@@ -202,7 +317,7 @@ function newGame(){
   if (m === 'online') return;
   try { localStorage.setItem('arrow-settings', JSON.stringify({diff, mode:m})); } catch(e){}
   N = SIZES[diff]; maxH = 3;
-  loadBoard(generate(N));
+  loadBoard(generate(N, Math.random, diff));
   const count = +m;
   players = Array.from({length:count}, (_,i) => ({name: count===1 ? 'You' : 'Player '+(i+1), hearts:3, score:0}));
   turn = 0; team = null;
@@ -332,7 +447,7 @@ async function createRoom(){
     if (!s.exists()) break;
     code = makeCode();
   }
-  await f.set(f.ref(f.db, `rooms/${code}/meta`), {seed:newSeed(), size:SIZES[$('diff').value], gen:1, t:Date.now()});
+  await f.set(f.ref(f.db, `rooms/${code}/meta`), {seed:newSeed(), size:SIZES[$('diff').value], lvl:$('diff').value, gen:1, t:Date.now()});
   role = 'h'; room = code;
   enterRoom(f);
 }
@@ -367,7 +482,7 @@ function startOnline(m){
   gameUnsubs.forEach(u => u()); gameUnsubs = [];
   gen = m.gen; applied = 0; N = m.size; maxH = 5;
   team = {hearts:5, h:0, g:0};
-  loadBoard(generate(N, mulberry32(m.seed)));
+  loadBoard(generate(N, mulberry32(m.seed), m.lvl));
   gameBase = `rooms/${room}/games/${gen}`;
   if (role === 'h'){
     gameUnsubs.push(f.onChildAdded(f.ref(f.db, gameBase+'/taps'), s => {
@@ -430,7 +545,7 @@ function applyEvent(ev){
 async function restartOnline(){
   if (role !== 'h') return setStatus('Only the host can start a new game.');
   const f = fb, old = gen;
-  await f.set(f.ref(f.db, `rooms/${room}/meta`), {seed:newSeed(), size:SIZES[$('diff').value], gen:old+1, t:Date.now()});
+  await f.set(f.ref(f.db, `rooms/${room}/meta`), {seed:newSeed(), size:SIZES[$('diff').value], lvl:$('diff').value, gen:old+1, t:Date.now()});
   f.remove(f.ref(f.db, `rooms/${room}/games/${old}`)).catch(()=>{});
 }
 
@@ -462,7 +577,7 @@ function handleTap(px, py){
   const ci = Math.floor(wx), cj = Math.floor(wy);
   let id = (ci>=0 && cj>=0 && ci<N && cj<N) ? occ[cj*N+ci] : -1;
   if (id === -1){                                   // forgiving taps: nearest line within finger reach
-    const tol = Math.max(0.5, Math.min(0.9, 22/(view.s*cs)));
+    const tol = Math.max(0.5, Math.min(0.7, 22/(view.s*cs)));
     let bd = 1e9;
     for (let j=cj-1; j<=cj+1; j++) for (let i=ci-1; i<=ci+1; i++){
       if (i<0||j<0||i>=N||j>=N || occ[j*N+i] === -1) continue;
@@ -524,7 +639,7 @@ cv.addEventListener('wheel', e => {
 }, {passive:false});
 /* ---------- card menus for mode / difficulty ---------- */
 const MODES = [['1','Solo','Play on your own · 3 hearts'], ['2','2 Players','Same screen · take turns'], ['online','Online co-op','Play with a friend · 5 shared hearts']];
-const DIFFS = [['Easy','8 × 8 board'], ['Medium','14 × 14 board'], ['Hard','22 × 22 board'], ['Nightmare','34 × 34 board']];
+const DIFFS = [['Easy','Easy',''], ['Medium','Medium',''], ['Hard','Hard',''], ['Nightmare','Nightmare','']];
 function refreshPills(){
   $('diffBtn').textContent = $('diff').value;
   $('modeBtn').textContent = (MODES.find(m => m[0] === $('mode').value) || MODES[0])[1];
@@ -537,7 +652,7 @@ function openPicker(kind){
     const b = document.createElement('button');
     b.className = 'opt' + (val === cur ? ' on' : '');
     b.innerHTML = '<b></b><small></small>';
-    b.firstChild.textContent = name; b.lastChild.textContent = sub;
+    b.firstChild.textContent = name; b.lastChild.textContent = sub; if (!sub) b.lastChild.remove();
     b.onclick = () => {
       $('picker').hidden = true;
       if (val === cur) return;
