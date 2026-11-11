@@ -55,6 +55,7 @@
   #endcard[hidden],#home[hidden]{display:none}
   #endcard{background:rgba(10,10,20,.78);z-index:6}
   .ebig{font-size:46px;line-height:1}
+  #esub:empty{display:none}
   #esub{margin:0;opacity:.85;font-size:15px;line-height:1.35}
   .primary{background:#8f98ff;color:#1e1f2e;font-weight:700}
   .primary:active{background:#a7aeff}
@@ -117,7 +118,7 @@
     <input id="code" maxlength="5" placeholder="CODE" autocapitalize="characters" autocomplete="off">
     <button id="join">Join room</button>
     <p id="lmsg"></p>
-    <button id="cancel">Back to solo</button>
+    <button id="cancel">Back</button>
   </div>
 </div>
 
@@ -495,15 +496,15 @@ function finish(lost){
   if (players.length === 1){
     setStatus(lost ? 'Out of hearts. Tap New to try again.' : 'Cleared! Tap New for another board.');
     const hl = players[0].hearts;
-    if (lost) showEnd(false, 'Out of hearts', `You cleared ${removed} of ${total} arrows.`, 700);
-    else showEnd(true, 'You did it!', `All ${total} arrows escaped with ${hl} ${hl === 1 ? 'heart' : 'hearts'} left.`, 800);
+    if (lost) showEnd(false, 'You Lost', '', 700);
+    else showEnd(true, 'Congratulations! You Won', '', 800);
   } else {
     const best = Math.max(...players.map(p=>p.score));
     const w = players.filter(p=>p.score===best);
     setStatus(w.length>1 ? "It's a draw! "+best+' each.' : w[0].name+' wins with '+best+' arrows!');
     const scores = players.map(p => `${p.name} ${p.score}`).join(' \u00B7 ');
-    if (lost) showEnd(false, 'Game over', `Both players are out of hearts. ${scores}`, 700);
-    else showEnd(true, w.length>1 ? "It's a draw!" : w[0].name+' wins!', scores, 800);
+    if (lost) showEnd(false, 'You Lost', '', 700);
+    else showEnd(true, w.length>1 ? "Congratulations! It's a draw" : 'Congratulations! '+w[0].name+' Won', '', 800);
   }
 }
 
@@ -562,7 +563,7 @@ function showEnd(win, title, sub, delay){
     const guest = room && role === 'g';
     $('etrophy').textContent = win ? '\uD83C\uDFC6' : '\uD83D\uDC94';
     $('etitle').textContent = title;
-    $('esub').textContent = sub + (guest ? ' Waiting for the host to start a new game.' : '');
+    $('esub').textContent = sub || (guest ? 'Waiting for the host to start a new game.' : '');
     $('enew').hidden = !!guest;
     $('endcard').hidden = false;
     if (win){ confetti(); if (navigator.vibrate) navigator.vibrate([40,60,40]); }
@@ -711,7 +712,7 @@ function applyEvent(ev){
     if (removed === total){
       over = true; updateUI();
       const me = role==='h' ? team.h : team.g, fr = role==='h' ? team.g : team.h;
-      showEnd(true, 'Cleared together!', `You ${me} \u00B7 Friend ${fr}.`, 800);
+      showEnd(true, 'Congratulations! You Won', '', 800);
       return setStatus(`Cleared together! You ${me} · Friend ${fr}. ${role==='h' ? 'Tap New for another board.' : 'Host can start the next one.'}`);
     }
   } else {
@@ -723,7 +724,7 @@ function applyEvent(ev){
     team.hearts--;
     if (team.hearts <= 0){
       over = true; updateUI();
-      showEnd(false, 'Out of hearts', `You cleared ${removed} of ${total} arrows together.`, 700);
+      showEnd(false, 'You Lost', '', 700);
       return setStatus(`Out of hearts. Cleared ${removed} of ${total}. ${role==='h' ? 'Tap New to retry.' : 'Host can start a new game.'}`);
     }
     setStatus('Blocked! A shared heart broke. The red arrow leaves once its way is clear.');
@@ -865,7 +866,7 @@ $('mode').onchange = () => {
     leaveRoom(); newGame();
   }
 };
-$('cancel').onclick = () => { $('lobby').hidden = true; leaveToSolo(); };
+$('cancel').onclick = () => { $('lobby').hidden = true; leaveToSolo(); goHome(); };
 async function lobbyAction(fn, btn){
   const label = btn.textContent;
   btn.disabled = true; btn.textContent = 'Connecting…'; lmsg('');
