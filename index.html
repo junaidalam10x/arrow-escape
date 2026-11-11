@@ -3,26 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<meta name="theme-color" content="#1e1f2e">
+<meta name="theme-color" content="#0a0b1f">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <title>Arrow Escape</title>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;height:100%;background:#1e1f2e;color:#c5cbff;font-family:system-ui,sans-serif}
+  html,body{margin:0;height:100%;background:#0a0b1f;color:#c5cbff;font-family:system-ui,sans-serif}
   #app{display:flex;flex-direction:column;height:100%}
   header{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
   .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
-  select,button,input{background:#3a3f63;color:#c5cbff;border:0;border-radius:10px;padding:9px 14px;font-size:15px}
+  select,button,input{background:#2b2d58;color:#c5cbff;border:0;border-radius:10px;padding:9px 14px;font-size:15px}
   button:active{background:#4b5182}
   #players{display:flex;gap:10px;justify-content:center}
-  .pl{padding:6px 14px;border-radius:12px;background:#2a2d47;border:2px solid transparent;min-width:120px;text-align:center}
-  .pl.on{border-color:#ff4b5c}
+  .pl{padding:6px 16px;border-radius:999px;background:transparent;border:1.5px solid rgba(185,170,255,.35);min-width:120px;text-align:center}
+  .pl.on{border-color:#b9a8ff}
+  .pl.solo{display:flex;align-items:center;gap:10px;justify-content:center;padding:5px 16px;min-width:0}
+  .pl.solo svg{width:28px;height:20px;stroke:#e4e6ff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .pl.solo .dv{width:1.5px;height:18px;background:rgba(185,170,255,.35)}
+  .pl.solo .hearts{font-size:14px;letter-spacing:2px;line-height:1}
+  .hb{display:inline-block;overflow:hidden;white-space:nowrap;animation:hbreak .9s ease-in forwards}
+  @keyframes hbreak{0%{transform:scale(1);max-width:1.6em;opacity:1}12%{transform:scale(1.4) rotate(-14deg)}28%{transform:scale(1.4) rotate(14deg)}45%{transform:scale(1.2) rotate(-8deg);opacity:1}100%{transform:translateY(14px) scale(.3) rotate(20deg);max-width:0;opacity:0}}
+  .ib{width:56px;padding:9px 0;font-size:22px;line-height:1;background:#2b2d58;border-radius:12px;text-align:center}
+  .ib svg{width:26px;height:24px;stroke:#e4e6ff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
+  .row{flex-wrap:nowrap;gap:8px}
+  .row button{height:46px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#2b2d58;font-size:15px;white-space:nowrap}
+  .row .ib{flex:0 0 50px;width:50px;font-size:20px}
+  .row .pill{flex:1 1 0;min-width:0;max-width:none}
   .pl b{display:block;font-size:13px;opacity:.8}
   .hearts{color:#ff4b5c;letter-spacing:2px}
   #bar{height:8px;background:#2a2d47;border-radius:4px;overflow:hidden}
   #bar i{display:block;height:100%;width:0;background:#8f98ff;transition:width .2s}
-  #status{text-align:center;min-height:22px;font-weight:600}
+  #status{display:none}
   #roomline{text-align:center;font-size:13px;opacity:.8;min-height:16px}
   #wrap{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
   canvas{display:block;touch-action:none}
@@ -33,7 +45,7 @@
   .opt small{font-size:12px;opacity:.7}
   .opt.on{border-color:#8f98ff;background:#454b78}
   .pill{min-width:104px}
-  .pill::after{content:' \25BE';opacity:.7}
+  .pill::after{content:'\00a0\25BE';opacity:.7;font-size:11px}
   .card{background:#2a2d47;border-radius:16px;padding:20px;width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;text-align:center}
   .card h3{margin:0}
   .card input{text-align:center;text-transform:uppercase;letter-spacing:4px;font-size:20px}
@@ -52,7 +64,17 @@
   .homebox{width:min(340px,88vw);display:flex;flex-direction:column;gap:12px;text-align:center;margin:auto;padding:24px 0}
   .homebox h1{margin:0;font-size:30px;color:#c5cbff}
   .homebox p{margin:0;opacity:.75;font-size:14px}
-  .logo{width:88px;height:88px;margin:0 auto}
+  .logo{width:88px;height:88px;margin:0 auto;display:block;border-radius:20px}
+  #splash{position:fixed;inset:0;z-index:100;background:#1e1f2e;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .35s ease}
+  #splash.out{opacity:0;pointer-events:none}
+  #splash svg{width:56vmin;height:56vmin;overflow:visible}
+  #splash .a1{animation:go1 .75s cubic-bezier(.6,0,.9,.5) .9s forwards}
+  #splash .a2{animation:go2 .75s cubic-bezier(.6,0,.9,.5) 1.0s forwards}
+  #splash svg{animation:pop .6s cubic-bezier(.2,.9,.3,1.2) both}
+  @keyframes go1{to{transform:translate(1100px,1100px)}}
+  @keyframes go2{to{transform:translate(-1100px,-1100px)}}
+  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+  @media (prefers-reduced-motion:reduce){#splash .a1,#splash .a2,#splash svg{animation:none}}
   .hlabel{font-size:12px;opacity:.65;text-transform:uppercase;letter-spacing:1.5px;margin-top:6px}
   .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
   .chip{padding:8px 14px;font-size:14px}
@@ -66,10 +88,11 @@
 <div id="app">
   <header>
     <div class="row">
+      <button id="back" class="ib" aria-label="Home"><svg viewBox="0 0 26 24"><path d="M12 4 L4 12 L12 20 M21 4 L13 12 L21 20"/></svg></button>
+      <button id="new" class="ib" aria-label="Restart"><svg viewBox="0 0 26 24"><path d="M20 12a7 7 0 1 1-2.4-5.3M19 3v5h-5"/></svg></button>
       <button id="diffBtn" class="pill"></button>
       <button id="modeBtn" class="pill"></button>
-      <button id="new">New</button>
-      <button id="hint">Hint</button>
+      <button id="hint" class="ib" aria-label="Hint">&#128161;</button>
       <select id="diff" hidden>
         <option>Easy</option><option>Medium</option><option selected>Hard</option><option>Nightmare</option>
       </select>
@@ -80,8 +103,7 @@
       </select>
     </div>
     <div id="players"></div>
-    <div id="bar"><i></i></div>
-    <div id="status"></div>
+        <div id="status"></div>
     <div id="roomline"></div>
   </header>
   <div id="wrap"><canvas id="c"></canvas></div>
@@ -119,13 +141,16 @@
   </div>
 </div>
 
+<div id="splash" aria-hidden="true">
+  <svg viewBox="0 0 512 512">
+    <g class="a1"><path d="M147 232 L255 340" stroke="#c5c9ff" stroke-width="24" fill="none"/><path d="M276 310 L225 361 L276 361 Z" fill="#c5c9ff"/></g>
+    <g class="a2"><path d="M355 284 L248 177" stroke="#9aa3ff" stroke-width="24" fill="none"/><path d="M278 156 L227 207 L227 156 Z" fill="#9aa3ff"/></g>
+  </svg>
+</div>
+
 <div id="home" hidden>
   <div class="homebox">
-    <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
-      <rect width="512" height="512" rx="96" fill="#2a2d47"/>
-      <path d="M120 380 V200 H330" fill="none" stroke="#9aa3ff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M320 130 L420 200 L320 270 Z" fill="#9aa3ff"/>
-    </svg>
+    <img class="logo" src="icon.svg" alt="">
     <h1>Arrow Escape</h1>
     <p>Slide every arrow out. Don't tap a blocked one.</p>
     <div class="hlabel">Difficulty</div>
@@ -407,17 +432,25 @@ function zoomAt(cx, cy, ns){
 
 function setStatus(t){ $('status').textContent = t; }
 
+const hbState = {};
 function updateUI(){
-  const H = n => '♥'.repeat(Math.max(n,0)) + '♡'.repeat(Math.max(maxH-n,0));
+  const H = (n, key) => {                                  // only the hearts you still have; a lost one breaks, then goes
+    const hs = hbState[key] || (hbState[key] = {n, t:0, c:0});
+    if (n < hs.n){ hs.t = Date.now(); hs.c = hs.n - n; } else if (n > hs.n) hs.c = 0;
+    hs.n = n;
+    const el = Date.now() - hs.t;
+    return '❤️'.repeat(Math.max(n,0)) + (hs.c && el < 1000 ? `<span class="hb" style="animation-delay:-${el}ms">💔</span>`.repeat(hs.c) : '');
+  };
   if (room && team){
     const me = role==='h' ? team.h : team.g, fr = role==='h' ? team.g : team.h;
-    $('players').innerHTML = `<div class="pl on"><b>Team · You ${me} · Friend ${fr}</b><span class="hearts">${H(team.hearts)}</span></div>`;
+    $('players').innerHTML = `<div class="pl on"><b>Team · You ${me} · Friend ${fr}</b><span class="hearts">${H(team.hearts,'team')}</span></div>`;
+  } else if (players && players.length === 1){
+    $('players').innerHTML = `<div class="pl solo on"><svg viewBox="0 0 34 24"><path d="M9 5h16c4 0 7 6 8 12 .4 3-2 4-4 2l-3-3H11l-3 3c-2 2-4.400 1-4-2 1-6 4-12 8-12z"/><path d="M11 9v5M8.500 11.500h5"/><circle cx="23" cy="10" r=".6"/><circle cx="26" cy="12.500" r=".6"/></svg><i class="dv"></i><span class="hearts">${H(players[0].hearts,'p0')}</span></div>`;
   } else if (players){
     $('players').innerHTML = players.map((p,i) =>
-      `<div class="pl ${i===turn && !over ? 'on':''}"><b>${p.name} · ${p.score}</b><span class="hearts">${H(p.hearts)}</span></div>`
+      `<div class="pl ${i===turn && !over ? 'on':''}"><b>${p.name} · ${p.score}</b><span class="hearts">${H(p.hearts,'p'+i)}</span></div>`
     ).join('');
   }
-  $('bar').firstElementChild.style.width = (total ? removed/total*100 : 0)+'%';
 }
 
 function nextTurn(){
@@ -822,6 +855,7 @@ $('diffBtn').onclick = () => openPicker('diff');
 $('modeBtn').onclick = () => openPicker('mode');
 $('pcancel').onclick = () => { $('picker').hidden = true; };
 $('picker').onclick = e => { if (e.target === $('picker')) $('picker').hidden = true; };
+$('back').onclick = () => goHome();
 $('new').onclick = () => room ? restartOnline() : newGame();
 $('diff').onchange = () => room ? restartOnline() : newGame();
 $('mode').onchange = () => {
@@ -853,17 +887,17 @@ $('hint').onclick = () => {
 addEventListener('resize', () => { if (arrows) layout(false); });
 
 /* ---------- drawing ---------- */
-const RED = '#ff4b5c', BLUE = '#9aa3ff', GREEN = '#5dffb0';
+const RED = '#ff4b5c', BLUE = '#c5c9ff', GREEN = '#5dffb0';
 const cellPts = a => a.path.map(([x,y]) => [x+0.5, y+0.5]);
 
 function strokePoly(pts, dx, dy, color){
-  const w = Math.max(2, cs*0.13);
+  const w = Math.max(1.6, cs*0.085);
   ctx.strokeStyle = ctx.fillStyle = color;
   ctx.lineWidth = w; ctx.lineJoin = ctx.lineCap = 'round';
   ctx.beginPath();
   pts.forEach(([x,y],i) => i ? ctx.lineTo(x*cs,y*cs) : ctx.moveTo(x*cs,y*cs));
   ctx.stroke();
-  const px = pts[pts.length-1][0]*cs, py = pts[pts.length-1][1]*cs, s = cs*0.34;
+  const px = pts[pts.length-1][0]*cs, py = pts[pts.length-1][1]*cs, s = cs*0.30;
   ctx.beginPath();
   ctx.moveTo(px+dx*s, py+dy*s);
   ctx.lineTo(px-dy*s*0.9-dx*s*0.2, py+dx*s*0.9-dy*s*0.2);
@@ -891,20 +925,13 @@ function snakePts(a, s){
 }
 
 function drawBoardBg(){
-  const S = N*cs, r = Math.min(cs*1.1, 30), cx = S/2, cy = S*0.55;
-  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, S*0.78);
-  g.addColorStop(0, '#27345c'); g.addColorStop(1, '#1a1f35');
-  ctx.fillStyle = g;
-  ctx.beginPath();                                          // rounded panel
-  ctx.moveTo(r,0); ctx.arcTo(S,0,S,S,r); ctx.arcTo(S,S,0,S,r); ctx.arcTo(0,S,0,0,r); ctx.arcTo(0,0,S,0,r); ctx.closePath();
-  ctx.fill();
-  ctx.lineWidth = 1.5/view.s; ctx.strokeStyle = 'rgba(130,150,230,.22)'; ctx.stroke();
-  const dg = ctx.createRadialGradient(cx, cy, 0, cx, cy, S*0.78);   // dots glow in the middle, fade at the edges
-  dg.addColorStop(0, 'rgba(150,165,240,.6)'); dg.addColorStop(1, 'rgba(150,165,240,.14)');
-  ctx.fillStyle = dg;
-  const dr = Math.max(cs*0.055, 1/view.s);
+  const busy = new Uint8Array(N*N);                          // dots show only in cells with no arrow left
+  for (const a of arrows) if (a.alive) for (const [x,y] of a.path) busy[y*N+x] = 1;
+  ctx.fillStyle = 'rgba(165,175,245,.4)';
+  const dr = Math.max(cs*0.05, 1/view.s);
   ctx.beginPath();
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){
+    if (busy[j*N+i]) continue;
     const x = (i+0.5)*cs, y = (j+0.5)*cs;
     ctx.moveTo(x+dr, y); ctx.arc(x, y, dr, 0, 6.2832);
   }
@@ -940,6 +967,13 @@ try {
 } catch(e){}
 newGame();
 requestAnimationFrame(frame);
+buildChips(); $('home').hidden = false;
+(function(){
+  const sp = $('splash'); let done = false;
+  const end = () => { if (done) return; done = true; sp.classList.add('out'); setTimeout(() => sp.remove(), 450); };
+  sp.addEventListener('pointerdown', end);
+  setTimeout(end, matchMedia('(prefers-reduced-motion:reduce)').matches ? 600 : 1900);
+})();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
