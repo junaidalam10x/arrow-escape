@@ -75,8 +75,8 @@
   #splash{position:fixed;inset:0;z-index:100;background:#1e1f2e;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .3s ease}
   #splash.out{opacity:0;pointer-events:none}
   #splash svg{width:56vmin;height:56vmin;overflow:visible}
-  #splash .a1{animation:go1 .55s cubic-bezier(.55,0,.85,.45) .22s forwards}
-  #splash .a2{animation:go2 .55s cubic-bezier(.55,0,.85,.45) .28s forwards}
+  #splash .a1{animation:go1 .55s cubic-bezier(.55,0,.85,.45) .08s forwards}
+  #splash .a2{animation:go2 .55s cubic-bezier(.55,0,.85,.45) .14s forwards}
   @keyframes go1{to{transform:translate(1100px,1100px)}}
   @keyframes go2{to{transform:translate(-1100px,-1100px)}}
   @media (prefers-reduced-motion:reduce){#splash .a1,#splash .a2{animation:none}}
@@ -973,15 +973,15 @@ try {
   const s = JSON.parse(localStorage.getItem('arrow-settings'));
   if (s){ $('diff').value = s.diff; $('mode').value = s.mode === '1' ? '1' : '1'; }
 } catch(e){}
-newGame();
+refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.20.0'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.20.1'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
 buildChips(); $('home').hidden = false;
 (function(){
   const sp = $('splash'); let done = false;
   const end = () => { if (done) return; done = true; sp.classList.add('out'); setTimeout(() => sp.remove(), 450); };
   sp.addEventListener('pointerdown', end);
-  setTimeout(end, matchMedia('(prefers-reduced-motion:reduce)').matches ? 400 : 640);
+  setTimeout(end, matchMedia('(prefers-reduced-motion:reduce)').matches ? 300 : 560);
 })();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
