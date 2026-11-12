@@ -12,14 +12,14 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;background:#0a0b1f;color:#c5cbff;font-family:system-ui,sans-serif}
   #app{display:flex;flex-direction:column;height:100%}
-  header{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+  header{padding:max(18px,env(safe-area-inset-top)) 6px 6px;display:flex;flex-direction:column;gap:8px}
   .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
   select,button,input{background:#2b2d58;color:#c5cbff;border:0;border-radius:10px;padding:9px 14px;font-size:15px}
   button:active{background:#4b5182}
   #players{display:flex;gap:10px;justify-content:center}
   .pl{padding:6px 16px;border-radius:999px;background:transparent;border:1.5px solid rgba(185,170,255,.35);min-width:120px;text-align:center}
   .pl.on{border-color:#b9a8ff}
-  .pl.solo{display:flex;align-items:center;gap:12px;justify-content:center;padding:6px 20px;min-width:0}
+  .pl.solo{display:flex;align-items:center;justify-content:center;padding:6px 20px;min-width:0}
   .pl.solo svg{width:30px;height:21px;stroke:#e4e6ff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .pl.solo .dv{width:1.5px;height:18px;background:rgba(185,170,255,.35)}
   .pl.solo .hearts{font-size:14px;letter-spacing:2px;line-height:1}
@@ -27,11 +27,11 @@
   @keyframes hbreak{0%{transform:scale(1);max-width:1.6em;opacity:1}12%{transform:scale(1.4) rotate(-14deg)}28%{transform:scale(1.4) rotate(14deg)}45%{transform:scale(1.2) rotate(-8deg);opacity:1}100%{transform:translateY(14px) scale(.3) rotate(20deg);max-width:0;opacity:0}}
   .ib{width:56px;padding:9px 0;font-size:22px;line-height:1;background:#2b2d58;border-radius:12px;text-align:center}
   .ib svg{width:26px;height:24px;stroke:#e4e6ff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
-  .row{flex-wrap:nowrap;gap:10px;padding:0 16px}
+  .row{flex-wrap:nowrap;gap:8px;padding:0}
   .row button{height:33px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#3c3d6c;font-size:14.5px;white-space:nowrap}
   .row .ib{flex:0 0 42px;width:42px;font-size:17px}
   .row .ib svg{width:20px;height:19px;stroke-width:2.1}
-  .row #back{flex:0 0 32px;width:32px;background:none}
+  .row #back{flex:0 0 34px;width:34px;background:none;justify-content:flex-start}
   .row #back svg{width:24px;height:24px;stroke:#fff;stroke-width:1.7}
   .row .pill{flex:1 1 0;min-width:0;max-width:none}
   #players{margin-top:14px}
@@ -453,7 +453,7 @@ function updateUI(){
     const me = role==='h' ? team.h : team.g, fr = role==='h' ? team.g : team.h;
     $('players').innerHTML = `<div class="pl on"><b>Team · You ${me} · Friend ${fr}</b><span class="hearts">${H(team.hearts,'team')}</span></div>`;
   } else if (players && players.length === 1){
-    $('players').innerHTML = `<div class="pl solo on"><svg viewBox="0 0 34 24"><path d="M9 5h16c4 0 7 6 8 12 .4 3-2 4-4 2l-3-3H11l-3 3c-2 2-4.400 1-4-2 1-6 4-12 8-12z"/><path d="M11 9v5M8.500 11.500h5"/><circle cx="23" cy="10" r=".6"/><circle cx="26" cy="12.500" r=".6"/></svg><i class="dv"></i><span class="hearts">${H(players[0].hearts,'p0')}</span></div>`;
+    $('players').innerHTML = `<div class="pl solo on"><span class="hearts">${H(players[0].hearts,'p0')}</span></div>`;
   } else if (players){
     $('players').innerHTML = players.map((p,i) =>
       `<div class="pl ${i===turn && !over ? 'on':''}"><b>${p.name} · ${p.score}</b><span class="hearts">${H(p.hearts,'p'+i)}</span></div>`
@@ -975,7 +975,7 @@ try {
 } catch(e){}
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.20.1'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.20.2'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
 buildChips(); $('home').hidden = false;
 (function(){
   const sp = $('splash'); let done = false;
