@@ -43,7 +43,7 @@
   #roomline{text-align:center;font-size:13px;opacity:.8;min-height:16px}
   #wrap{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
   canvas{display:block;touch-action:none}
-  #lobby,#picker{position:fixed;inset:0;background:rgba(10,10,20,.85);display:flex;align-items:center;justify-content:center;z-index:5}
+  #lobby,#picker{position:fixed;inset:0;background:rgba(10,10,20,.85);display:flex;align-items:center;justify-content:center;z-index:20}
   #lobby[hidden],#picker[hidden]{display:none}
   #popts{display:flex;flex-direction:column;gap:10px}
   .opt{display:flex;flex-direction:column;align-items:center;gap:3px;width:100%;padding:12px 14px;border:2px solid transparent;font-size:17px}
@@ -99,7 +99,7 @@
       <button id="modeBtn" class="pill"></button>
       <button id="hint" class="ib" aria-label="Hint">&#128161;</button>
       <select id="diff" hidden>
-        <option>Easy</option><option>Medium</option><option selected>Hard</option><option>Nightmare</option>
+        <option selected>Medium</option><option>Hard</option><option>Nightmare</option>
       </select>
       <select id="mode" hidden>
         <option value="1">Solo</option>
@@ -157,8 +157,6 @@
     <img class="logo" src="icon.svg" alt="">
     <h1>Arrow Escape</h1>
     <p>Slide every arrow out. Don't tap a blocked one.</p>
-    <div class="hlabel">Difficulty</div>
-    <div class="chips" id="hchips"></div>
     <div class="hlabel">Play</div>
     <button class="big" data-m="1">Solo<small>Play on your own</small></button>
     <button class="big" data-m="online">Online co-op<small>Play with a friend</small></button>
@@ -170,7 +168,7 @@
 
 <script>
 const DIRS = [[0,-1],[0,1],[-1,0],[1,0]];
-const SIZES = {Easy:8, Medium:14, Hard:22, Nightmare:34};
+const SIZES = {Medium:14, Hard:22, Nightmare:34};
 const $ = id => document.getElementById(id);
 const cv = $('c'), ctx = cv.getContext('2d');
 
@@ -236,7 +234,6 @@ function genClassic(n, rng = Math.random){
 const HARD = {
   Hard:      {minLen:2, maxLen:6, straight:0.45, longBias:0.9, refill:2},
   Nightmare: {minLen:2, maxLen:6, straight:0.40, longBias:0.9, refill:2},
-  Easy:      {minLen:2, maxLen:5, straight:0.60, longBias:1.0, refill:1},
   Medium:    {minLen:2, maxLen:6, straight:0.50, longBias:0.95, refill:1}
 };
 
@@ -341,7 +338,7 @@ function genDense(n, rng, cfg){
   return {o, list};
 }
 
-function generate(n, rng = Math.random, lvl = 'Easy'){
+function generate(n, rng = Math.random, lvl = 'Medium'){
   return HARD[lvl] ? genDense(n, rng, HARD[lvl]) : genClassic(n, rng);
 }
 
@@ -583,25 +580,15 @@ function hideEnd(){
   stopConfetti();
 }
 
-function buildChips(){
-  const box = $('hchips'); box.innerHTML = '';
-  for (const k of Object.keys(SIZES)){
-    const b = document.createElement('button');
-    b.className = 'chip' + (k === $('diff').value ? ' on' : '');
-    b.textContent = k;
-    b.onclick = () => { $('diff').value = k; refreshPills(); buildChips(); };
-    box.appendChild(b);
-  }
-}
 
 function goHome(){
   hideEnd();
   if (room) leaveRoom();                                         // leaving an online room closes it for you
-  buildChips();
   $('home').hidden = false;
 }
 
 function startFromHome(m){
+  if (m === '1'){ pickDifficultyThenStart(); return; }           // Solo: choose a difficulty first, then play
   $('home').hidden = true;
   $('mode').value = m; refreshPills();
   $('mode').onchange();                                          // solo / 2 players: new board. online: opens the room card
@@ -836,10 +823,25 @@ cv.addEventListener('wheel', e => {
 }, {passive:false});
 /* ---------- card menus for mode / difficulty ---------- */
 const MODES = [['1','Solo','Play on your own · 3 hearts'], ['online','Online co-op','Play with a friend · 5 shared hearts']];
-const DIFFS = [['Easy','Easy',''], ['Medium','Medium',''], ['Hard','Hard',''], ['Nightmare','Nightmare','']];
+const DIFFS = [['Medium','Medium',''], ['Hard','Hard',''], ['Nightmare','Nightmare','']];
 function refreshPills(){
   $('diffBtn').textContent = $('diff').value;
   $('modeBtn').textContent = (MODES.find(m => m[0] === $('mode').value) || MODES[0])[1];
+}
+function pickDifficultyThenStart(){
+  $('ptitle').textContent = 'Choose difficulty';
+  $('popts').innerHTML = '';
+  for (const [val, name] of DIFFS){
+    const b = document.createElement('button');
+    b.className = 'opt' + (val === $('diff').value ? ' on' : '');
+    b.innerHTML = '<b></b>'; b.firstChild.textContent = name;
+    b.onclick = () => {
+      $('picker').hidden = true; $('home').hidden = true;
+      $('diff').value = val; $('mode').value = '1'; refreshPills(); newGame();
+    };
+    $('popts').appendChild(b);
+  }
+  $('picker').hidden = false;
 }
 function openPicker(kind){
   const list = kind === 'mode' ? MODES : DIFFS, cur = $(kind).value;
@@ -971,12 +973,12 @@ function frame(now){
 /* ---------- boot ---------- */
 try {
   const s = JSON.parse(localStorage.getItem('arrow-settings'));
-  if (s){ $('diff').value = s.diff; $('mode').value = s.mode === '1' ? '1' : '1'; }
+  if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = s.mode === '1' ? '1' : '1'; }
 } catch(e){}
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.20.2'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
-buildChips(); $('home').hidden = false;
+const VERSION = '1.21.0'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
+$('home').hidden = false;
 (function(){
   const sp = $('splash'); let done = false;
   const end = () => { if (done) return; done = true; sp.classList.add('out'); setTimeout(() => sp.remove(), 450); };
