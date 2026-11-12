@@ -2,7 +2,7 @@
   "name": "Arrow Escape",
   "short_name": "Arrows",
   "start_url": "./index.html",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#1d1f2e",
   "theme_color": "#1d1f2e",
   "icons": [
@@ -31,5 +31,9 @@
       "purpose": "any"
     }
   ],
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ]
 }
