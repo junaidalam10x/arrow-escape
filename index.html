@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<meta name="theme-color" content="#0a0b1f">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#1d1f2e">
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
@@ -11,8 +12,9 @@
 <title>Arrow Escape</title>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;height:100%;background:#0a0b1f;color:#c5cbff;font-family:system-ui,sans-serif}
-  #app{display:flex;flex-direction:column;height:100%}
+  html{color-scheme:dark;background:#1d1f2e}
+  html,body{margin:0;height:100%;min-height:100vh;min-height:100dvh;overscroll-behavior:none;background:#1d1f2e;color:#c5cbff;font-family:system-ui,sans-serif}
+  #app{display:flex;flex-direction:column;height:100vh;height:100dvh;padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
   header{padding:max(18px,env(safe-area-inset-top)) 6px 6px;display:flex;flex-direction:column;gap:8px}
   .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
   select,button,input{background:#2b2d58;color:#c5cbff;border:0;border-radius:10px;padding:9px 14px;font-size:15px}
@@ -23,9 +25,15 @@
   .pl.solo{display:flex;align-items:center;justify-content:center;padding:6px 20px;min-width:0}
   .pl.solo svg{width:30px;height:21px;stroke:#e4e6ff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .pl.solo .dv{width:1.5px;height:18px;background:rgba(185,170,255,.35)}
-  .pl.solo .hearts{font-size:14px;letter-spacing:2px;line-height:1}
-  .hb{display:inline-block;overflow:hidden;white-space:nowrap;animation:hbreak .9s ease-in forwards}
-  @keyframes hbreak{0%{transform:scale(1);max-width:1.6em;opacity:1}12%{transform:scale(1.4) rotate(-14deg)}28%{transform:scale(1.4) rotate(14deg)}45%{transform:scale(1.2) rotate(-8deg);opacity:1}100%{transform:translateY(14px) scale(.3) rotate(20deg);max-width:0;opacity:0}}
+  .pl.solo .hearts{font-size:15px;line-height:1;display:flex;align-items:center}
+  .hrow{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:20px;vertical-align:middle}
+  .hf,.hl{position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:15px;line-height:1}
+  .hl svg{width:18px;height:17px;fill:none;stroke:#8f98d8;stroke-width:1.8;stroke-linejoin:round;opacity:.65}
+  .hl i{position:absolute;inset:0;font-style:normal;line-height:1;text-align:center;pointer-events:none}
+  .hl.fx svg{animation:hlin .9s ease-out both;animation-delay:var(--d)}
+  .hl.fx i{animation:hbreak .9s ease-in both;animation-delay:var(--d)}
+  @keyframes hlin{0%,45%{opacity:0}100%{opacity:.65}}
+  @keyframes hbreak{0%{transform:scale(1);opacity:1}12%{transform:scale(1.15) rotate(-14deg)}28%{transform:scale(1.15) rotate(14deg)}50%{transform:scale(1.05) rotate(-8deg);opacity:1}100%{transform:translateY(8px) scale(.4) rotate(20deg);opacity:0}}
   .ib{width:56px;padding:9px 0;font-size:22px;line-height:1;background:#2b2d58;border-radius:12px;text-align:center}
   .ib svg{width:26px;height:24px;stroke:#e4e6ff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
   .row{flex-wrap:nowrap;gap:8px;padding:0}
@@ -35,7 +43,14 @@
   .row #back{flex:0 0 34px;width:34px;background:none;justify-content:flex-start}
   .row #back svg{width:24px;height:24px;stroke:#fff;stroke-width:1.7}
   .row .pill{flex:1 1 0;min-width:0;max-width:none}
-  #players{margin-top:14px}
+  #players{margin:0}
+  .row{justify-content:center;gap:10px}
+  .row #diffBtn,.row #modeBtn{display:none}
+  .row button{height:30px}
+  .row .ib{flex:0 0 38px;width:38px}
+  .row #back{flex:0 0 30px;width:30px;justify-content:center}
+  .row #players .pl{margin:0}
+  .pl.solo{padding:0 16px;height:30px;box-sizing:border-box}
   .pl b{display:block;font-size:13px;opacity:.8}
   .hearts{color:#ff4b5c;letter-spacing:2px}
   #bar{height:8px;background:#2a2d47;border-radius:4px;overflow:hidden}
@@ -67,7 +82,7 @@
   .primary:active{background:#a7aeff}
   @keyframes pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
   #endcard:not([hidden]) .card{animation:pop .25s ease-out}
-  #home{background:#0a0b1f;z-index:8;overflow:auto}
+  #home{background:#1d1f2e;z-index:8;overflow:auto}
   #ver{position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));text-align:center;font-size:12px;letter-spacing:.08em;color:#8a8fc4;opacity:.55;pointer-events:none}
   .homebox{width:min(250px,68vw);display:flex;flex-direction:column;gap:16px;text-align:center;margin:auto;padding:24px 0}
   .homebox h1{margin:6px 0 38px;font-size:32px;color:#c5cbff;letter-spacing:.2px}
@@ -75,7 +90,7 @@
   @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
   .homebox p{margin:0;opacity:.75;font-size:14px}
   .logo{width:58px;height:58px;margin:0 auto;display:block}
-  #splash{position:fixed;inset:0;z-index:100;background:#0a0b1f;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .3s ease}
+  #splash{position:fixed;inset:0;z-index:100;background:#1d1f2e;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .3s ease}
   #splash.out{opacity:0;pointer-events:none}
   #splash svg{width:56vmin;height:56vmin;overflow:visible}
   #splash .a1{animation:go1 .55s cubic-bezier(.55,0,.85,.45) .08s forwards}
@@ -102,6 +117,7 @@
     <div class="row">
       <button id="back" class="ib" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M12 3 L4 12 L12 21 M21 3 L13 12 L21 21"/></svg></button>
       <button id="new" class="ib" aria-label="Restart"><svg viewBox="0 0 26 24"><path d="M20 12a7 7 0 1 1-2.4-5.3M19 3v5h-5"/></svg></button>
+      <div id="players"></div>
       <button id="diffBtn" class="pill"></button>
       <button id="modeBtn" class="pill"></button>
       <button id="hint" class="ib" aria-label="Hint">&#128161;</button>
@@ -113,7 +129,6 @@
         <option value="online">Online co-op</option>
       </select>
     </div>
-    <div id="players"></div>
         <div id="status"></div>
     <div id="roomline"></div>
   </header>
@@ -444,12 +459,18 @@ function setStatus(t){ $('status').textContent = t; }
 
 const hbState = {};
 function updateUI(){
-  const H = (n, key) => {                                  // only the hearts you still have; a lost one breaks, then goes
+  const OUTLINE = '<svg viewBox="0 0 24 22"><path d="M12 20.5C5 15 2 11.5 2 7.6 2 4.8 4.200 2.800 6.800 2.800c2 0 3.600 1.100 5.200 3.200 1.600-2.100 3.200-3.200 5.200-3.200 2.600 0 4.800 2 4.800 4.800 0 3.900-3 7.400-10 12.900z"/></svg>';
+  const H = (n, key) => {                                  // hearts you have, then an outline where each lost one was; a fresh loss breaks first
     const hs = hbState[key] || (hbState[key] = {n, t:0, c:0});
     if (n < hs.n){ hs.t = Date.now(); hs.c = hs.n - n; } else if (n > hs.n) hs.c = 0;
     hs.n = n;
-    const el = Date.now() - hs.t;
-    return '❤️'.repeat(Math.max(n,0)) + (hs.c && el < 1000 ? `<span class="hb" style="animation-delay:-${el}ms">💔</span>`.repeat(hs.c) : '');
+    const el = Date.now() - hs.t, fresh = hs.c && el < 1200;
+    let out = '<span class="hf">❤️</span>'.repeat(Math.max(n,0));
+    for (let k = Math.max(n,0); k < maxH; k++){
+      const breaking = fresh && k < n + hs.c;
+      out += `<span class="hl${breaking ? ' fx' : ''}"${breaking ? ` style="--d:-${el}ms"` : ''}>${OUTLINE}${breaking ? '<i>💔</i>' : ''}</span>`;
+    }
+    return `<span class="hrow">${out}</span>`;
   };
   if (room && team){
     const me = role==='h' ? team.h : team.g, fr = role==='h' ? team.g : team.h;
@@ -982,7 +1003,7 @@ try {
 } catch(e){}
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.21.4'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.22.4'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
 $('home').hidden = false;
 (function(){
   const sp = $('splash'); let done = false;
