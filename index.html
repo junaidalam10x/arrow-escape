@@ -235,7 +235,9 @@ function genClassic(n, rng = Math.random){
    Only rng() is used (no sort(), no Math.random), so both phones build the identical board. */
 const HARD = {
   Hard:      {minLen:2, maxLen:6, straight:0.45, longBias:0.9, refill:2},
-  Nightmare: {minLen:2, maxLen:6, straight:0.40, longBias:0.9, refill:2}
+  Nightmare: {minLen:2, maxLen:6, straight:0.40, longBias:0.9, refill:2},
+  Easy:      {minLen:2, maxLen:5, straight:0.60, longBias:1.0, refill:1},
+  Medium:    {minLen:2, maxLen:6, straight:0.50, longBias:0.95, refill:1}
 };
 
 function genDense(n, rng, cfg){
@@ -327,10 +329,11 @@ function genDense(n, rng, cfg){
     }
   }
 
-  for (let round = 0; round <= cfg.refill; round++){     // later rounds refill the holes left by removed arrows
+  for (let round = 0; round <= cfg.refill + 12; round++){ // later rounds refill the holes left by removed arrows
     cover();
     for (const a of all) if (a.alive){ if (a.fresh) orient(a); else setDir(a); }
     solve();
+    if (round >= cfg.refill && own.indexOf(-1) === -1) break;   // board full: no blank cells
   }
   const list = all.filter(a => a.alive).map((a,i) => ({id:i, path:a.path, dx:a.dx, dy:a.dy, alive:true}));
   const o = new Array(n*n).fill(-1);
@@ -408,7 +411,8 @@ function newGame(){
 
 /* ---------- view: fit to screen, zoom and pan ---------- */
 let view = {s:1, ox:0, oy:0}, W = 0, H = 0, DPR = 1;
-const maxScale = () => Math.max(3, 70/cs);
+const MINZ = 0.5;                                  // zoom out to half the fit-to-screen size
+const maxScale = () => Math.max(3, 70/cs);          // zoom in: 3x on small boards, up to ~6x on Nightmare
 
 function clampView(){
   const size = N*cs*view.s;
@@ -423,12 +427,12 @@ function layout(reset = true){
   cv.style.width = W+'px'; cv.style.height = H+'px';
   cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
   cs = Math.max((Math.min(W,H) - 12) / N, 4);        // whole board fits any screen
-  view.s = reset ? 1 : Math.min(maxScale(), Math.max(1, view.s));
+  view.s = reset ? 1 : Math.min(maxScale(), Math.max(MINZ, view.s));
   clampView();
 }
 
 function zoomAt(cx, cy, ns){
-  ns = Math.min(maxScale(), Math.max(1, ns));
+  ns = Math.min(maxScale(), Math.max(MINZ, ns));
   const wx = (cx - view.ox)/(view.s*cs), wy = (cy - view.oy)/(view.s*cs);
   view.s = ns; view.ox = cx - wx*ns*cs; view.oy = cy - wy*ns*cs;
   clampView();
@@ -781,7 +785,7 @@ function handleTap(px, py){
   if (id === -1){                                   // double-tap empty space: zoom in / back to fit
     const now = performance.now();
     if (lastEmpty && now-lastEmpty.t < 350 && Math.hypot(px-lastEmpty.x, py-lastEmpty.y) < 40){
-      if (view.s > 1.05){ view.s = 1; clampView(); } else zoomAt(px, py, Math.min(maxScale(), 2.6));
+      if (Math.abs(view.s - 1) > 0.05){ view.s = 1; clampView(); } else zoomAt(px, py, Math.min(maxScale(), 2.6));
       lastEmpty = null;
     } else lastEmpty = {t:now, x:px, y:py};
     return;
@@ -809,7 +813,7 @@ cv.addEventListener('pointermove', e => {
   } else if (ptrs.size === 2 && gest){
     ptrs.set(e.pointerId, p);
     const {d, m} = pair();
-    const ns = Math.min(maxScale(), Math.max(1, view.s * d/gest.d));
+    const ns = Math.min(maxScale(), Math.max(MINZ, view.s * d/gest.d));
     const wx = (gest.m.x - view.ox)/(view.s*cs), wy = (gest.m.y - view.oy)/(view.s*cs);
     view.s = ns; view.ox = m.x - wx*ns*cs; view.oy = m.y - wy*ns*cs; clampView();
     gest.d = d; gest.m = m;
@@ -971,7 +975,7 @@ try {
 } catch(e){}
 newGame();
 requestAnimationFrame(frame);
-const VERSION = '1.19.0'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.20.0'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
 buildChips(); $('home').hidden = false;
 (function(){
   const sp = $('splash'); let done = false;
