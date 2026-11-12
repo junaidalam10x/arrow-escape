@@ -67,20 +67,19 @@
   @keyframes pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
   #endcard:not([hidden]) .card{animation:pop .25s ease-out}
   #home{background:#1e1f2e;z-index:8;overflow:auto}
+  #ver{position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));text-align:center;font-size:12px;letter-spacing:.08em;color:#8a8fc4;opacity:.55;pointer-events:none}
   .homebox{width:min(340px,88vw);display:flex;flex-direction:column;gap:12px;text-align:center;margin:auto;padding:24px 0}
   .homebox h1{margin:0;font-size:30px;color:#c5cbff}
   .homebox p{margin:0;opacity:.75;font-size:14px}
   .logo{width:88px;height:88px;margin:0 auto;display:block;border-radius:20px}
-  #splash{position:fixed;inset:0;z-index:100;background:#1e1f2e;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .35s ease}
+  #splash{position:fixed;inset:0;z-index:100;background:#1e1f2e;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .3s ease}
   #splash.out{opacity:0;pointer-events:none}
   #splash svg{width:56vmin;height:56vmin;overflow:visible}
-  #splash .a1{animation:go1 .75s cubic-bezier(.6,0,.9,.5) .9s forwards}
-  #splash .a2{animation:go2 .75s cubic-bezier(.6,0,.9,.5) 1.0s forwards}
-  #splash svg{animation:pop .6s cubic-bezier(.2,.9,.3,1.2) both}
+  #splash .a1{animation:go1 .55s cubic-bezier(.55,0,.85,.45) .22s forwards}
+  #splash .a2{animation:go2 .55s cubic-bezier(.55,0,.85,.45) .28s forwards}
   @keyframes go1{to{transform:translate(1100px,1100px)}}
   @keyframes go2{to{transform:translate(-1100px,-1100px)}}
-  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
-  @media (prefers-reduced-motion:reduce){#splash .a1,#splash .a2,#splash svg{animation:none}}
+  @media (prefers-reduced-motion:reduce){#splash .a1,#splash .a2{animation:none}}
   .hlabel{font-size:12px;opacity:.65;text-transform:uppercase;letter-spacing:1.5px;margin-top:6px}
   .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
   .chip{padding:8px 14px;font-size:14px}
@@ -164,6 +163,7 @@
     <button class="big" data-m="1">Solo<small>Play on your own</small></button>
     <button class="big" data-m="online">Online co-op<small>Play with a friend</small></button>
   </div>
+  <div id="ver"></div>
 </div>
 
 <canvas id="confetti"></canvas>
@@ -971,12 +971,13 @@ try {
 } catch(e){}
 newGame();
 requestAnimationFrame(frame);
+const VERSION = '1.19.0'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
 buildChips(); $('home').hidden = false;
 (function(){
   const sp = $('splash'); let done = false;
   const end = () => { if (done) return; done = true; sp.classList.add('out'); setTimeout(() => sp.remove(), 450); };
   sp.addEventListener('pointerdown', end);
-  setTimeout(end, matchMedia('(prefers-reduced-motion:reduce)').matches ? 600 : 1900);
+  setTimeout(end, matchMedia('(prefers-reduced-motion:reduce)').matches ? 400 : 640);
 })();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
