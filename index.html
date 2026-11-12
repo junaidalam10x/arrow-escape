@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<meta name="theme-color" content="#1e1f2e">
+<meta name="theme-color" content="#0a0b1f">
+<meta name="color-scheme" content="dark">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -66,15 +67,15 @@
   .primary:active{background:#a7aeff}
   @keyframes pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
   #endcard:not([hidden]) .card{animation:pop .25s ease-out}
-  #home{background:#1e1f2e;z-index:8;overflow:auto}
+  #home{background:#0a0b1f;z-index:8;overflow:auto}
   #ver{position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));text-align:center;font-size:12px;letter-spacing:.08em;color:#8a8fc4;opacity:.55;pointer-events:none}
   .homebox{width:min(250px,68vw);display:flex;flex-direction:column;gap:16px;text-align:center;margin:auto;padding:24px 0}
   .homebox h1{margin:6px 0 38px;font-size:32px;color:#c5cbff;letter-spacing:.2px}
   #home:not([hidden]) .homebox{animation:rise .45s ease both}
   @keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
   .homebox p{margin:0;opacity:.75;font-size:14px}
-  .logo{width:88px;height:88px;margin:0 auto;display:block;border-radius:20px}
-  #splash{position:fixed;inset:0;z-index:100;background:#1e1f2e;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .3s ease}
+  .logo{width:58px;height:58px;margin:0 auto;display:block}
+  #splash{position:fixed;inset:0;z-index:100;background:#0a0b1f;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:opacity .3s ease}
   #splash.out{opacity:0;pointer-events:none}
   #splash svg{width:56vmin;height:56vmin;overflow:visible}
   #splash .a1{animation:go1 .55s cubic-bezier(.55,0,.85,.45) .08s forwards}
@@ -160,7 +161,7 @@
 
 <div id="home" hidden>
   <div class="homebox">
-    <img class="logo" src="icon.svg" alt="">
+    <svg class="logo" viewBox="130 140 240 240" aria-hidden="true"><path d="M147 232 L255 340" stroke="#c5c9ff" stroke-width="24" fill="none"/><path d="M276 310 L225 361 L276 361 Z" fill="#c5c9ff"/><path d="M355 284 L248 177" stroke="#9aa3ff" stroke-width="24" fill="none"/><path d="M278 156 L227 207 L227 156 Z" fill="#9aa3ff"/></svg>
     <h1>Arrow Escape</h1>
     <button class="big" data-m="1">Solo<small>Play on your own</small></button>
     <button class="big" data-m="online">Online co-op<small>Play with a friend</small></button>
@@ -981,7 +982,7 @@ try {
 } catch(e){}
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.21.2'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.21.4'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
 $('home').hidden = false;
 (function(){
   const sp = $('splash'); let done = false;

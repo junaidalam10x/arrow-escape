@@ -3,8 +3,8 @@
   "short_name": "Arrows",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#1e1f2e",
-  "theme_color": "#1e1f2e",
+  "background_color": "#0a0b1f",
+  "theme_color": "#0a0b1f",
   "icons": [
     {
       "src": "icon-192.png",
