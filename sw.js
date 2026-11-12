@@ -1,5 +1,5 @@
-const CACHE = 'arrow-escape-v15';
-const FILES = ['./', 'index.html', 'manifest.json', 'icon.svg', 'firebase-config.js'];
+const CACHE = 'arrow-escape-v17';
+const FILES = ['./', 'index.html', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'firebase-config.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
@@ -13,17 +13,15 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Network first (so updates arrive when online), cache fallback (so it works offline).
+// Cache first = the app opens instantly even on slow data; a fresh copy is fetched in the background
+// and used the next time the app opens.
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
-  e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, copy));
-        return res;
-      })
-      .catch(() => caches.match(e.request).then(r => r || caches.match('index.html')))
-  );
+  e.respondWith(caches.open(CACHE).then(async c => {
+    const hit = await c.match(e.request, {ignoreSearch: true});
+    const net = fetch(e.request).then(res => { if (res && res.ok) c.put(e.request, res.clone()); return res; }).catch(() => null);
+    if (hit) { e.waitUntil(net); return hit; }
+    return (await net) || (await c.match('index.html'));
+  }));
 });

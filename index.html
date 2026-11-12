@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<meta name="theme-color" content="#0a0b1f">
+<meta name="theme-color" content="#1e1f2e">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Arrow Escape</title>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -18,18 +19,22 @@
   #players{display:flex;gap:10px;justify-content:center}
   .pl{padding:6px 16px;border-radius:999px;background:transparent;border:1.5px solid rgba(185,170,255,.35);min-width:120px;text-align:center}
   .pl.on{border-color:#b9a8ff}
-  .pl.solo{display:flex;align-items:center;gap:10px;justify-content:center;padding:5px 16px;min-width:0}
-  .pl.solo svg{width:28px;height:20px;stroke:#e4e6ff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .pl.solo{display:flex;align-items:center;gap:12px;justify-content:center;padding:6px 20px;min-width:0}
+  .pl.solo svg{width:30px;height:21px;stroke:#e4e6ff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .pl.solo .dv{width:1.5px;height:18px;background:rgba(185,170,255,.35)}
   .pl.solo .hearts{font-size:14px;letter-spacing:2px;line-height:1}
   .hb{display:inline-block;overflow:hidden;white-space:nowrap;animation:hbreak .9s ease-in forwards}
   @keyframes hbreak{0%{transform:scale(1);max-width:1.6em;opacity:1}12%{transform:scale(1.4) rotate(-14deg)}28%{transform:scale(1.4) rotate(14deg)}45%{transform:scale(1.2) rotate(-8deg);opacity:1}100%{transform:translateY(14px) scale(.3) rotate(20deg);max-width:0;opacity:0}}
   .ib{width:56px;padding:9px 0;font-size:22px;line-height:1;background:#2b2d58;border-radius:12px;text-align:center}
   .ib svg{width:26px;height:24px;stroke:#e4e6ff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
-  .row{flex-wrap:nowrap;gap:8px}
-  .row button{height:46px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#2b2d58;font-size:15px;white-space:nowrap}
-  .row .ib{flex:0 0 50px;width:50px;font-size:20px}
+  .row{flex-wrap:nowrap;gap:10px;padding:0 16px}
+  .row button{height:33px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#3c3d6c;font-size:14.5px;white-space:nowrap}
+  .row .ib{flex:0 0 42px;width:42px;font-size:17px}
+  .row .ib svg{width:20px;height:19px;stroke-width:2.1}
+  .row #back{flex:0 0 32px;width:32px;background:none}
+  .row #back svg{width:24px;height:24px;stroke:#fff;stroke-width:1.7}
   .row .pill{flex:1 1 0;min-width:0;max-width:none}
+  #players{margin-top:14px}
   .pl b{display:block;font-size:13px;opacity:.8}
   .hearts{color:#ff4b5c;letter-spacing:2px}
   #bar{height:8px;background:#2a2d47;border-radius:4px;overflow:hidden}
@@ -89,7 +94,7 @@
 <div id="app">
   <header>
     <div class="row">
-      <button id="back" class="ib" aria-label="Home"><svg viewBox="0 0 26 24"><path d="M12 4 L4 12 L12 20 M21 4 L13 12 L21 20"/></svg></button>
+      <button id="back" class="ib" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M12 3 L4 12 L12 21 M21 3 L13 12 L21 21"/></svg></button>
       <button id="new" class="ib" aria-label="Restart"><svg viewBox="0 0 26 24"><path d="M20 12a7 7 0 1 1-2.4-5.3M19 3v5h-5"/></svg></button>
       <button id="diffBtn" class="pill"></button>
       <button id="modeBtn" class="pill"></button>
@@ -152,7 +157,8 @@
   <div class="homebox">
     <img class="logo" src="icon.svg" alt="">
     <h1>Arrow Escape</h1>
-    <div class="hlabel">choose Difficulty Level</div>
+    <p>Slide every arrow out. Don't tap a blocked one.</p>
+    <div class="hlabel">Difficulty</div>
     <div class="chips" id="hchips"></div>
     <div class="hlabel">Play</div>
     <button class="big" data-m="1">Solo<small>Play on your own</small></button>
