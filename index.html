@@ -15,7 +15,7 @@
   html{color-scheme:dark;background:#1d1f2e}
   html,body{margin:0;height:100%;min-height:100vh;min-height:100dvh;overscroll-behavior:none;background:#1d1f2e;color:#c5cbff;font-family:system-ui,sans-serif}
   #app{display:flex;flex-direction:column;height:100vh;height:100dvh;padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
-  header{padding:max(18px,env(safe-area-inset-top)) 6px 6px;display:flex;flex-direction:column;gap:8px}
+  header{padding:max(28px,env(safe-area-inset-top)) 6px 8px;display:flex;flex-direction:column;gap:8px}
   .row{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
   select,button,input{background:#2b2d58;color:#c5cbff;border:0;border-radius:10px;padding:9px 14px;font-size:15px}
   button:active{background:#4b5182}
@@ -25,10 +25,10 @@
   .pl.solo{display:flex;align-items:center;justify-content:center;padding:6px 20px;min-width:0}
   .pl.solo svg{width:30px;height:21px;stroke:#e4e6ff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .pl.solo .dv{width:1.5px;height:18px;background:rgba(185,170,255,.35)}
-  .pl.solo .hearts{font-size:15px;line-height:1;display:flex;align-items:center}
-  .hrow{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:20px;vertical-align:middle}
-  .hf,.hl{position:relative;display:flex;align-items:center;justify-content:center;width:20px;height:20px;font-size:15px;line-height:1}
-  .hl svg{width:18px;height:17px;fill:none;stroke:#8f98d8;stroke-width:1.8;stroke-linejoin:round;opacity:.65}
+  .pl.solo .hearts{font-size:17px;line-height:1;display:flex;align-items:center}
+  .hrow{display:inline-flex;align-items:center;justify-content:center;gap:5px;height:22px;vertical-align:middle}
+  .hf,.hl{position:relative;display:flex;align-items:center;justify-content:center;width:22px;height:22px;font-size:17px;line-height:1}
+  .hl svg{width:20px;height:19px;fill:none;stroke:#8f98d8;stroke-width:1.8;stroke-linejoin:round;opacity:.65}
   .hl i{position:absolute;inset:0;font-style:normal;line-height:1;text-align:center;pointer-events:none}
   .hl.fx svg{animation:hlin .9s ease-out both;animation-delay:var(--d)}
   .hl.fx i{animation:hbreak .9s ease-in both;animation-delay:var(--d)}
@@ -44,13 +44,15 @@
   .row #back svg{width:24px;height:24px;stroke:#fff;stroke-width:1.7}
   .row .pill{flex:1 1 0;min-width:0;max-width:none}
   #players{margin:0}
-  .row{justify-content:center;gap:10px}
+  .row{justify-content:center;gap:16px}
   .row #diffBtn,.row #modeBtn{display:none}
-  .row button{height:30px}
-  .row .ib{flex:0 0 38px;width:38px}
-  .row #back{flex:0 0 30px;width:30px;justify-content:center}
+  .row button{height:36px;border-radius:11px}
+  .row .ib{flex:0 0 46px;width:46px}
+  .row .ib svg{width:22px;height:21px}
+  .row #back{flex:0 0 28px;width:28px;justify-content:center}
+  .row #back svg{width:28px;height:28px}
   .row #players .pl{margin:0}
-  .pl.solo{padding:0 16px;height:30px;box-sizing:border-box}
+  .pl.solo{padding:0 18px;height:36px;min-width:127px;box-sizing:border-box}
   .pl b{display:block;font-size:13px;opacity:.8}
   .hearts{color:#ff4b5c;letter-spacing:2px}
   #bar{height:8px;background:#2a2d47;border-radius:4px;overflow:hidden}
@@ -1003,7 +1005,7 @@ try {
 } catch(e){}
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.22.4'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.23.0'; $('ver').textContent = 'Version ' + VERSION;   // bump on every release
 $('home').hidden = false;
 (function(){
   const sp = $('splash'); let done = false;
