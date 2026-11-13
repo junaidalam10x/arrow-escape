@@ -70,7 +70,7 @@
   .opt.on{border-color:#8f98ff;background:#454b78}
   .pill{min-width:104px}
   .pill::after{content:'\00a0\25BE';opacity:.7;font-size:11px}
-  .card{background:#2a2d47;border-radius:16px;padding:20px;width:min(320px,90vw);display:flex;flex-direction:column;gap:12px;text-align:center}
+  .card{background:#2a2d47;border-radius:20px;padding:28px 24px 24px;width:min(340px,90vw);display:flex;flex-direction:column;gap:18px;text-align:center}
   .card h3{margin:0}
   .card input{text-align:center;text-transform:uppercase;letter-spacing:4px;font-size:20px}
   #lmsg{min-height:20px;font-size:14px;color:#ffb3ba;margin:0}
@@ -84,7 +84,6 @@
   .primary{background:#8f98ff;color:#1e1f2e;font-weight:700}
   .primary:active{background:#a7aeff}
   @keyframes pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
-  #endcard:not([hidden]) .card{animation:pop .25s ease-out}
   .homebox{width:min(250px,68vw);display:flex;flex-direction:column;gap:16px;text-align:center;margin:auto;padding:24px 0}
   .homebox h1{margin:6px 0 38px;font-size:32px;color:#c5cbff;letter-spacing:.2px}
   #home:not([hidden]) .homebox{animation:rise .45s ease both}
@@ -160,6 +159,18 @@
   .ci small{font-size:10px;opacity:.75;text-align:center}
   .ci.no{border-color:transparent}
   .ci.no b{opacity:.35;font-size:24px;line-height:1.4}
+  #endcard.bare,html[data-theme=light] #endcard.bare{background:transparent}
+  #endcard.bare .card,html[data-theme=light] #endcard.bare .card{background:none;box-shadow:none;width:auto;padding:0}
+  #endcard.bare .ebig{font-size:84px}
+  #endcard.bare h3{font-size:30px;text-shadow:0 2px 14px rgba(0,0,0,.55)}
+  #endcard.bare #esub{text-shadow:0 2px 10px rgba(0,0,0,.55)}
+  .btns{display:flex;gap:12px;margin-top:6px}
+  .card h3{font-size:20px}
+  #endcard .card{gap:14px}
+  .ebig{margin-bottom:2px}
+  #popts{gap:12px}
+  .btns button{flex:1 1 0;min-width:0;padding:14px 8px;font-size:16px}
+  .btns button[hidden]{display:none}
   #avopts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   #avopts button{font-size:28px;padding:8px 0;border-radius:12px}
 
@@ -253,8 +264,8 @@
     <div class="ebig" id="etrophy"></div>
     <h3 id="etitle"></h3>
     <p id="esub"></p>
-    <button id="enew" class="primary">New game</button>
-    <button id="ehome">Go to home</button>
+    <div class="btns"><button id="enew" class="primary">New game</button>
+    <button id="ehome">Go to home</button></div>
   </div>
 </div>
 
@@ -711,8 +722,8 @@ function tap(a){
 function finish(lost){
   over = true; updateUI();
   lastWin = !lost; lastDrop = null;
-  if (levelMode != null && !lost) rollDrop();
-  if (levelMode != null && !lost && levelMode >= lvCur){ lvCur = levelMode + 1; store.set('arrow-level', lvCur); }
+  const firstClear = levelMode != null && !lost && levelMode >= lvCur;     // collectibles drop only the first time a level is cleared
+  if (firstClear){ rollDrop(); lvCur = levelMode + 1; store.set('arrow-level', lvCur); }
   if (players.length === 1){
     setStatus(lost ? 'Out of hearts. Tap New to try again.' : 'Cleared! Tap New for another board.');
     const hl = players[0].hearts;
@@ -730,7 +741,8 @@ function finish(lost){
 
 /* ---------- result card, confetti and home screen ---------- */
 const cf = $('confetti'), cfx = cf.getContext('2d');
-let parts = [], cfRAF = 0, cfLast = 0, endTimer = 0;
+let parts = [], cfRAF = 0, cfLast = 0, endTimer = 0, nextTimer = 0;
+const PRAISE = ['Marvelous!','Gorgeous!','Excellent!','Great!','Brilliant!','Fantastic!','Superb!','Awesome!','Perfect!','Amazing!'];
 
 function stopConfetti(){
   cancelAnimationFrame(cfRAF); cfRAF = 0; cfLast = 0; parts = [];
@@ -781,20 +793,24 @@ function showEnd(win, title, sub, delay){
   endTimer = setTimeout(() => {                                  // let the last arrow finish leaving first
     endTimer = 0;
     const guest = room && role === 'g';
-    $('etrophy').textContent = win ? (lastDrop ? lastDrop[1] : '\uD83C\uDFC6') : '\uD83D\uDC94';
-    $('etitle').textContent = title;
-    $('esub').textContent = (win && lastDrop) ? 'New collectible: ' + lastDrop[2] + ' (' + lastDrop[3] + ')' : (sub || (guest ? 'Waiting for the host to start a new game.' : ''));
-    $('enew').hidden = !!guest;
-    $('enew').textContent = levelMode != null ? (win ? 'Next level' : 'Try again') : 'New game';
+    const lvWin = win && levelMode != null && !room;
+    $('endcard').classList.toggle('bare', lvWin);
+    $('etrophy').textContent = win ? '\uD83C\uDFC6' : '\uD83D\uDC94';
+    $('etitle').textContent = lvWin ? PRAISE[Math.floor(Math.random()*PRAISE.length)] : title;
+    $('esub').textContent = (win && lastDrop) ? 'New collectible: ' + lastDrop[1] + ' ' + lastDrop[2] + ' (' + lastDrop[3] + ')' : (sub || (guest ? 'Waiting for the host to start a new game.' : ''));
+    $('enew').hidden = !!guest || lvWin;
+    $('ehome').hidden = lvWin;
+    $('enew').textContent = win ? (levelMode != null ? 'Next level' : 'New game') : 'Try again';
     $('ehome').textContent = levelMode != null ? 'Close' : 'Go to home';
     $('endcard').hidden = false;
+    if (lvWin) nextTimer = setTimeout(() => { nextTimer = 0; hideEnd(); levelMode++; lvSel = levelMode; lvBoard = newSeed(); newGame(); }, lastDrop ? 2800 : 2000);
     if (win){ confetti(); haptic([40,60,40]); }
     sfx(win ? 'win' : 'lose');
   }, delay);
 }
 
 function hideEnd(){
-  clearTimeout(endTimer); endTimer = 0;
+  clearTimeout(endTimer); endTimer = 0; clearTimeout(nextTimer); nextTimer = 0;
   $('endcard').hidden = true;
   stopConfetti();
 }
@@ -865,6 +881,8 @@ function openModal(html, wire){
   $('modal').hidden = false;
   $('mclose').onclick = () => { $('modal').hidden = true; };
   if (wire) wire();
+  const pr = $('mcard').querySelector('.primary');
+  if (pr){ const d = document.createElement('div'); d.className = 'btns'; $('mcard').insertBefore(d, pr); d.appendChild(pr); d.appendChild($('mclose')); }
 }
 $('modal').onclick = e => { if (e.target === $('modal')) $('modal').hidden = true; };
 $('avbtn').onclick = () => {
@@ -1285,7 +1303,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.26.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.28.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
