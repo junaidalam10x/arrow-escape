@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#1d1f2e">
+<meta name="theme-color" content="#1d1f2e" id="tc">
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Arrow Escape</title>
+<script>try{if(JSON.parse(localStorage.getItem("arrow-prefs")).dark===false)document.documentElement.dataset.theme="light"}catch(e){}</script>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html{color-scheme:dark;background:#1d1f2e}
@@ -152,8 +153,53 @@
   #modal .card h3{text-align:center}
   #modal .card p{margin:0;font-size:14px;line-height:1.5;opacity:.85}
   #modal .card input{text-transform:none;letter-spacing:0;font-size:17px}
+  #modal .card{max-height:82vh;overflow:auto}
+  #cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .ci{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border-radius:12px;background:rgba(165,175,255,.1);border:1.5px solid var(--rc)}
+  .ci b{font-size:28px;line-height:1.2;font-weight:400}
+  .ci small{font-size:10px;opacity:.75;text-align:center}
+  .ci.no{border-color:transparent}
+  .ci.no b{opacity:.35;font-size:24px;line-height:1.4}
   #avopts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   #avopts button{font-size:28px;padding:8px 0;border-radius:12px}
+
+  html[data-theme=light],html[data-theme=light] body{background:#f1f2fb;color:#2a2d47;color-scheme:light}
+  html[data-theme=light] select,html[data-theme=light] button,html[data-theme=light] input{background:#e2e4f6;color:#2a2d47}
+  html[data-theme=light] button:active{background:#d0d3ee}
+  html[data-theme=light] .pl{border-color:rgba(60,70,160,.35)}
+  html[data-theme=light] .pl.solo svg,html[data-theme=light] .ib svg{stroke:#2a2d47}
+  html[data-theme=light] .pl.solo .dv{background:rgba(60,70,160,.35)}
+  html[data-theme=light] .row button{background:#dfe2f5}
+  html[data-theme=light] .row #back{background:none}
+  html[data-theme=light] .row #back svg{stroke:#2a2d47}
+  html[data-theme=light] .hl svg{stroke:#6a72b8}
+  html[data-theme=light] .card{background:#fff;color:#2a2d47;box-shadow:0 10px 30px rgba(40,50,120,.18)}
+  html[data-theme=light] #lobby,html[data-theme=light] #picker,html[data-theme=light] #modal{background:rgba(241,242,251,.88)}
+  html[data-theme=light] #endcard{background:rgba(241,242,251,.85)}
+  html[data-theme=light] .opt.on{background:#d5d9fb;border-color:#5b66e8}
+  html[data-theme=light] .primary{background:#5b66e8;color:#fff}
+  html[data-theme=light] .scr,html[data-theme=light] #splash{background:#f1f2fb}
+  html[data-theme=light] .homebox h1,html[data-theme=light] .stitle{color:#2a2d47}
+  html[data-theme=light] .big{background:linear-gradient(180deg,#fff,#e6e8fa);color:#2a2d47;border-color:rgba(60,70,160,.2);box-shadow:0 4px 0 #b9bfe6,0 10px 20px rgba(40,50,120,.15),inset 0 1px 0 #fff}
+  html[data-theme=light] .big:active{box-shadow:0 1px 0 #b9bfe6,0 3px 8px rgba(40,50,120,.15)}
+  html[data-theme=light] #lplay .big{background:linear-gradient(180deg,#7a84f5,#5b66e8);color:#fff;box-shadow:0 4px 0 #3b44b0,0 10px 20px rgba(40,50,120,.25),inset 0 1px 0 rgba(255,255,255,.35)}
+  html[data-theme=light] #linfo{background:#f1f2fb}
+  html[data-theme=light] #tabs{background:#fff;box-shadow:0 8px 24px rgba(40,50,120,.18)}
+  html[data-theme=light] .tab{color:#7a80b0;background:none}
+  html[data-theme=light] .tab.on{color:#5b66e8;background:rgba(91,102,232,.12)}
+  html[data-theme=light] .lv{background:#fff;color:#2a2d47}
+  html[data-theme=light] .lv.done{background:#dfe2f8}
+  html[data-theme=light] .lv.sel{background:#d5d9fb;border-color:#5b66e8;color:#2a2d47}
+  html[data-theme=light] .av{background:#fff;border-color:rgba(60,70,160,.25)}
+  html[data-theme=light] .avedit{background:#5b66e8}
+  html[data-theme=light] .avedit svg{stroke:#fff}
+  html[data-theme=light] .list{background:#fff}
+  html[data-theme=light] .li{background:none;color:#2a2d47;border-top-color:rgba(60,70,160,.1)}
+  html[data-theme=light] .tg{background:#cfd3ee}
+  html[data-theme=light] .tg.on{background:#5b66e8}
+  html[data-theme=light] #profver{color:#6a70a8}
+  html[data-theme=light] #lmsg{color:#d6334a}
+  html[data-theme=light] #avopts button{background:#eceefb}
 </style>
 </head>
 <body>
@@ -241,8 +287,12 @@
     <button class="li" id="nameRow">Username<span id="nameVal"></span></button>
   </div>
   <div class="list">
+    <button class="li" id="darkRow">Dark mode<i class="tg" id="darkTg"></i></button>
     <button class="li" id="vibRow">Vibrations<i class="tg" id="vibTg"></i></button>
     <button class="li" id="sndRow">Sounds<i class="tg" id="sndTg"></i></button>
+  </div>
+  <div class="list">
+    <button class="li" id="collRow">Collection<span id="collVal"></span></button>
   </div>
   <div class="list">
     <button class="li" id="privRow">Privacy Policy<span class="chev">&rsaquo;</span></button>
@@ -269,7 +319,7 @@ const store = {
   get(k, d){ try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch(e){ return d; } },
   set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 };
-const prefs = Object.assign({name:'Player', avatar:'\uD83D\uDE42', vib:false, snd:false}, store.get('arrow-prefs', {}));
+const prefs = Object.assign({name:'Player', avatar:'\uD83D\uDE42', vib:false, snd:false, dark:true}, store.get('arrow-prefs', {}));
 const savePrefs = () => store.set('arrow-prefs', prefs);
 const haptic = p => { if (prefs.vib) try { navigator.vibrate && navigator.vibrate(p); } catch(e){} };
 let actx = null;
@@ -294,10 +344,32 @@ function sfx(kind){
   } catch(e){}
 }
 
+
+/* ---------- collection: exclusive items that can drop when you win a level ---------- */
+const ITEMS = [
+  ['fox','\uD83E\uDD8A','Fox','Common'],['panda','\uD83D\uDC3C','Panda','Common'],['frog','\uD83D\uDC38','Frog','Common'],['cat','\uD83D\uDC31','Cat','Common'],
+  ['dog','\uD83D\uDC36','Dog','Common'],['bunny','\uD83D\uDC30','Bunny','Common'],['owl','\uD83E\uDD89','Owl','Common'],['bee','\uD83D\uDC1D','Bee','Common'],
+  ['tiger','\uD83D\uDC2F','Tiger','Rare'],['lion','\uD83E\uDD81','Lion','Rare'],['octopus','\uD83D\uDC19','Octopus','Rare'],['whale','\uD83D\uDC33','Whale','Rare'],
+  ['rocket','\uD83D\uDE80','Rocket','Rare'],['robot','\uD83E\uDD16','Robot','Rare'],['alien','\uD83D\uDC7E','Alien','Epic'],['unicorn','\uD83E\uDD84','Unicorn','Epic'],
+  ['dragon','\uD83D\uDC09','Dragon','Epic'],['diamond','\uD83D\uDC8E','Diamond','Epic'],['crown','\uD83D\uDC51','Crown','Legendary'],['trophy','\uD83C\uDFC6','Golden Trophy','Legendary']
+];
+const RARITY = {Common:{w:60,c:'#8a8fc4'}, Rare:{w:25,c:'#4dd0ff'}, Epic:{w:11,c:'#c77dff'}, Legendary:{w:4,c:'#ffd166'}};
+let owned = store.get('arrow-coll', []).filter(id => ITEMS.some(i => i[0] === id));
+let lastDrop = null;
+function rollDrop(){
+  lastDrop = null;
+  const left = ITEMS.filter(i => !owned.includes(i[0]));
+  if (!left.length || Math.random() > 0.35) return;               // roughly 1 win in 3 drops something
+  let r = Math.random() * left.reduce((t,i) => t + RARITY[i[3]].w, 0);
+  for (const i of left){ r -= RARITY[i[3]].w; if (r <= 0){ lastDrop = i; break; } }
+  lastDrop = lastDrop || left[left.length-1];
+  owned.push(lastDrop[0]); store.set('arrow-coll', owned);
+}
+
 /* ---------- levels: endless, mixed difficulty, same board for everyone ---------- */
 const LV_CYCLE = ['Medium','Medium','Hard','Medium','Hard','Medium','Hard','Hard','Medium','Nightmare'];
 const levelDiff = n => LV_CYCLE[(n-1) % LV_CYCLE.length];
-const levelSeed = n => (n * 7919 + 104729) >>> 0;
+let lvBoard = 1;                                               // every play (and every retry) gets a brand new pattern
 let levelMode = null;                                          // null = random solo / online, number = playing that level
 let lvCur = Math.max(1, store.get('arrow-level', 1) | 0);      // highest unlocked level
 let lvSel = lvCur, lastWin = false;
@@ -533,7 +605,7 @@ function newGame(){
   if (m === 'online') return;
   if (!lv) store.set('arrow-settings', {diff, mode:m});
   N = SIZES[diff]; maxH = 3;
-  loadBoard(generate(N, lv ? mulberry32(levelSeed(levelMode)) : Math.random, diff));
+  loadBoard(generate(N, lv ? mulberry32(lvBoard) : Math.random, diff));
   const count = +m;
   players = Array.from({length:count}, (_,i) => ({name: count===1 ? 'You' : 'Player '+(i+1), hearts:3, score:0}));
   turn = 0; team = null;
@@ -638,7 +710,8 @@ function tap(a){
 
 function finish(lost){
   over = true; updateUI();
-  lastWin = !lost;
+  lastWin = !lost; lastDrop = null;
+  if (levelMode != null && !lost) rollDrop();
   if (levelMode != null && !lost && levelMode >= lvCur){ lvCur = levelMode + 1; store.set('arrow-level', lvCur); }
   if (players.length === 1){
     setStatus(lost ? 'Out of hearts. Tap New to try again.' : 'Cleared! Tap New for another board.');
@@ -708,12 +781,12 @@ function showEnd(win, title, sub, delay){
   endTimer = setTimeout(() => {                                  // let the last arrow finish leaving first
     endTimer = 0;
     const guest = room && role === 'g';
-    $('etrophy').textContent = win ? '\uD83C\uDFC6' : '\uD83D\uDC94';
+    $('etrophy').textContent = win ? (lastDrop ? lastDrop[1] : '\uD83C\uDFC6') : '\uD83D\uDC94';
     $('etitle').textContent = title;
-    $('esub').textContent = sub || (guest ? 'Waiting for the host to start a new game.' : '');
+    $('esub').textContent = (win && lastDrop) ? 'New collectible: ' + lastDrop[2] + ' (' + lastDrop[3] + ')' : (sub || (guest ? 'Waiting for the host to start a new game.' : ''));
     $('enew').hidden = !!guest;
     $('enew').textContent = levelMode != null ? (win ? 'Next level' : 'Try again') : 'New game';
-    $('ehome').textContent = levelMode != null ? 'Levels' : 'Go to home';
+    $('ehome').textContent = levelMode != null ? 'Close' : 'Go to home';
     $('endcard').hidden = false;
     if (win){ confetti(); haptic([40,60,40]); }
     sfx(win ? 'win' : 'lose');
@@ -752,7 +825,7 @@ function startFromHome(m){
 }
 
 function startLevel(n){
-  levelMode = n; lvSel = n;
+  levelMode = n; lvSel = n; lvBoard = newSeed();
   showScreen(null);
   $('mode').value = '1';
   if (room) leaveRoom();
@@ -782,6 +855,8 @@ function renderLevels(){
 function renderProfile(){
   $('avbtn').textContent = prefs.avatar;
   $('nameVal').textContent = prefs.name;
+  $('collVal').textContent = owned.length + ' / ' + ITEMS.length + '  \u203A';
+  $('darkTg').classList.toggle('on', prefs.dark);
   $('vibTg').classList.toggle('on', prefs.vib);
   $('sndTg').classList.toggle('on', prefs.snd);
 }
@@ -794,6 +869,7 @@ function openModal(html, wire){
 $('modal').onclick = e => { if (e.target === $('modal')) $('modal').hidden = true; };
 $('avbtn').onclick = () => {
   const list = ['\uD83D\uDE42','\uD83D\uDE0E','\uD83E\uDD13','\uD83E\uDD20','\uD83E\uDD8A','\uD83D\uDC3C','\uD83D\uDC38','\uD83D\uDC2F','\uD83E\uDD81','\uD83D\uDC19','\uD83D\uDC7E','\uD83D\uDE80'];
+  owned.forEach(id => { const it = ITEMS.find(i => i[0] === id); if (it && !list.includes(it[1])) list.push(it[1]); });
   openModal('<h3>Choose avatar</h3><div id="avopts"></div>', () => {
     list.forEach(e => { const b = document.createElement('button'); b.textContent = e; b.onclick = () => { prefs.avatar = e; savePrefs(); renderProfile(); $('modal').hidden = true; }; $('avopts').appendChild(b); });
   });
@@ -802,8 +878,23 @@ $('nameRow').onclick = () => openModal('<h3>Username</h3><input id="nameIn" maxl
   $('nameIn').value = prefs.name;
   $('nameOk').onclick = () => { prefs.name = $('nameIn').value.trim() || 'Player'; savePrefs(); renderProfile(); $('modal').hidden = true; };
 });
+function applyTheme(){
+  const d = prefs.dark !== false;
+  document.documentElement.dataset.theme = d ? 'dark' : 'light';
+  $('tc').content = d ? '#1d1f2e' : '#f1f2fb';
+  BLUE = d ? '#c5c9ff' : '#4a52c9'; GREEN = d ? '#5dffb0' : '#12a36a'; DOT = d ? 'rgba(165,175,245,.4)' : 'rgba(60,70,160,.3)';
+}
+$('darkRow').onclick = () => { prefs.dark = !prefs.dark; savePrefs(); applyTheme(); renderProfile(); };
 $('vibRow').onclick = () => { prefs.vib = !prefs.vib; savePrefs(); renderProfile(); haptic(25); };
 $('sndRow').onclick = () => { prefs.snd = !prefs.snd; savePrefs(); renderProfile(); sfx('ok'); };
+$('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + ITEMS.length + '</h3><p style="text-align:center">Win levels for a chance to find exclusive items.</p><div id="cgrid"></div>', () => {
+  ITEMS.forEach(i => {
+    const got = owned.includes(i[0]), d = document.createElement('div');
+    d.className = 'ci' + (got ? '' : ' no'); d.style.setProperty('--rc', RARITY[i[3]].c);
+    d.innerHTML = '<b></b><small></small>'; d.firstChild.textContent = got ? i[1] : '?'; d.lastChild.textContent = got ? i[2] : i[3];
+    $('cgrid').appendChild(d);
+  });
+});
 $('privRow').onclick = () => openModal('<h3>Privacy Policy</h3><p>Arrow Escape stores your username, avatar, settings and level progress only on your device. Online co-op shares anonymous game moves with your friend through a temporary room code. We do not collect personal information, show ads or track you.</p>');
 $('termRow').onclick = () => openModal('<h3>Terms of Use</h3><p>Arrow Escape is a free game provided as is, without warranties. Please play fair in online rooms. Your progress is saved on this device and may be lost if you clear the app data.</p>');
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => { haptic(10); showScreen(t.dataset.t); });
@@ -812,7 +903,7 @@ $('lgo').onclick = () => startLevel(lvSel);
 $('enew').onclick = () => {
   hideEnd();
   if (room) return restartOnline();
-  if (levelMode != null){ if (lastWin) { levelMode++; lvSel = levelMode; } newGame(); return; }
+  if (levelMode != null){ if (lastWin) { levelMode++; lvSel = levelMode; } lvBoard = newSeed(); newGame(); return; }
   newGame();
 };
 $('ehome').onclick = () => goHome(levelMode != null ? 'levels' : 'home');
@@ -1086,7 +1177,7 @@ $('modeBtn').onclick = () => openPicker('mode');
 $('pcancel').onclick = () => { $('picker').hidden = true; };
 $('picker').onclick = e => { if (e.target === $('picker')) $('picker').hidden = true; };
 $('back').onclick = () => goHome(levelMode != null ? 'levels' : 'home');
-$('new').onclick = () => room ? restartOnline() : newGame();
+$('new').onclick = () => { if (!room && levelMode != null) lvBoard = newSeed(); room ? restartOnline() : newGame(); };
 $('diff').onchange = () => room ? restartOnline() : newGame();
 $('mode').onchange = () => {
   if ($('mode').value === 'online'){
@@ -1117,7 +1208,7 @@ $('hint').onclick = () => {
 addEventListener('resize', () => { if (arrows) layout(false); });
 
 /* ---------- drawing ---------- */
-const RED = '#ff4b5c', BLUE = '#c5c9ff', GREEN = '#5dffb0';
+const RED = '#ff4b5c'; let BLUE = '#c5c9ff', GREEN = '#5dffb0', DOT = 'rgba(165,175,245,.4)';
 const cellPts = a => a.path.map(([x,y]) => [x+0.5, y+0.5]);
 
 function strokePoly(pts, dx, dy, color){
@@ -1157,7 +1248,7 @@ function snakePts(a, s){
 function drawBoardBg(){
   const busy = new Uint8Array(N*N);                          // dots show only in cells with no arrow left
   for (const a of arrows) if (a.alive) for (const [x,y] of a.path) busy[y*N+x] = 1;
-  ctx.fillStyle = 'rgba(165,175,245,.4)';
+  ctx.fillStyle = DOT;
   const dr = Math.max(cs*0.05, 1/view.s);
   ctx.beginPath();
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){
@@ -1194,7 +1285,8 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.24.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.26.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+applyTheme();
 showScreen('home');
 (function(){
   const sp = $('splash'); let done = false;
