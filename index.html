@@ -145,10 +145,10 @@
   .tg::after{content:'';position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#c5cbff;transition:transform .18s}
   .tg.on{background:#8f98ff}
   .tg.on::after{transform:translateX(19px);background:#fff}
-  #social{display:flex;justify-content:center;gap:14px;margin:24px 0 4px}
-  #social a{width:48px;height:48px;border-radius:50%;background:#2a2d47;color:#c5cbff;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+  #social{display:flex;justify-content:center;gap:12px;margin:18px 0 2px}
+  #social a{width:40px;height:40px;border-radius:50%;background:#2a2d47;color:#c5cbff;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
   #social a:active{background:#3c3d6c}
-  #social svg{width:22px;height:22px;fill:currentColor}
+  #social svg{width:18px;height:18px;fill:currentColor}
   html[data-theme=light] #social a{background:#fff;color:#2a2d47}
   #profver{text-align:center;font-size:12px;letter-spacing:.08em;color:#8a8fc4;opacity:.6;margin-top:18px}
   #modal{position:fixed;inset:0;background:rgba(10,10,20,.85);display:flex;align-items:center;justify-content:center;z-index:30}
@@ -316,8 +316,8 @@
   </div>
   <div id="social">
     <a href="https://github.com/junaidalam10x" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.921.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
-    <a href="https://x.com/junaidalam10x" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
     <a href="https://www.instagram.com/junaidalam10x" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" style="fill:currentColor;stroke:none"/></svg></a>
+    <a href="https://x.com/junaidalam10x" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg></a>
     <a href="https://youtube.com/@junaidalam10x" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
   </div>
   <div id="profver"></div>
@@ -903,9 +903,14 @@ $('avbtn').onclick = () => {
     list.forEach(e => { const b = document.createElement('button'); b.textContent = e; b.onclick = () => { prefs.avatar = e; savePrefs(); renderProfile(); $('modal').hidden = true; }; $('avopts').appendChild(b); });
   });
 };
-$('nameRow').onclick = () => openModal('<h3>Username</h3><input id="nameIn" maxlength="16" autocomplete="off"><button id="nameOk" class="primary">Save</button>', () => {
+$('nameRow').onclick = () => openModal('<h3>Username</h3><input id="nameIn" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false"><p id="nameHint" style="text-align:center;font-size:13px;opacity:.7;margin-top:-8px">A-Z, a-z, 0-9, - and _ only. No spaces.</p><button id="nameOk" class="primary">Save</button>', () => {
   $('nameIn').value = prefs.name; $('nameIn').focus(); $('nameIn').select();
-  $('nameOk').onclick = () => { prefs.name = $('nameIn').value.trim() || 'Player'; savePrefs(); renderProfile(); $('modal').hidden = true; };
+  const clean = v => v.replace(/[^A-Za-z0-9_-]/g, '');
+  $('nameIn').oninput = () => {
+    const v = $('nameIn').value, c = clean(v);
+    if (v !== c){ $('nameIn').value = c; $('nameHint').style.color = '#ff6b7a'; $('nameHint').style.opacity = 1; }
+  };
+  $('nameOk').onclick = () => { prefs.name = clean($('nameIn').value) || 'Player'; savePrefs(); renderProfile(); $('modal').hidden = true; };
 });
 function applyTheme(){
   const d = prefs.dark !== false;
@@ -1314,7 +1319,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.30.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.31.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
