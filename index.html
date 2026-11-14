@@ -119,17 +119,32 @@
   .stitle{margin:6px 0 18px;text-align:center;font-size:20px;font-weight:700;color:#e4e6ff}
   #tabs{--tabbg:#2a2d47;position:fixed;left:50%;transform:translateX(-50%);width:min(230px,80vw);bottom:max(26px,calc(env(safe-area-inset-bottom) + 14px));height:62px;z-index:9;display:flex;background:var(--tabbg);border-radius:31px;box-shadow:0 8px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06);padding:0 6px}
   #tabs[hidden]{display:none}
-  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border-radius:0;padding:0;font-size:12px;color:#5d6299;touch-action:manipulation;transition:color .15s}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border-radius:0;padding:0;font-size:11.5px;color:#5d6299;touch-action:manipulation;transition:color .15s}
   .tab svg{width:26px;height:26px;fill:currentColor;stroke:none}
   .tab .cut{fill:var(--tabbg)}
+  .tab .cutS{fill:none;stroke:var(--tabbg);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #levels:not([hidden]){display:flex;flex-direction:column;overflow:hidden;padding:max(22px,env(safe-area-inset-top)) 0 0}
+  #lhead{display:flex;justify-content:center;gap:34px;margin:4px 0 14px}
+  #lhead button{background:none;border-radius:0;padding:6px 2px 9px;font-size:18px;font-weight:600;color:#6c71a6;position:relative;transition:color .15s}
+  #lhead button:active{background:none}
+  #lhead button.on{color:#e4e6ff}
+  #lhead button.on::after{content:'';position:absolute;left:18%;right:18%;bottom:0;height:3px;border-radius:2px;background:#8f98ff}
+  html[data-theme=light] #lhead button{background:none;color:#9aa0cc}
+  html[data-theme=light] #lhead button.on{color:#2a2d47}
+  #lpager{flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  #lpager::-webkit-scrollbar{display:none}
+  #lpager section{flex:0 0 100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always;overflow-y:auto;overscroll-behavior-y:contain;padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+  #lsub{margin:0 0 10px;text-align:center;font-size:13px;color:#8a8fc4}
   .tab .ring{fill:none;stroke:currentColor;stroke-width:1.8}
   .tab.on{color:#e4e6ff;background:none}
   .tab.on svg{color:#a9b0ff}
   .tab:active{background:none;color:#c5cbff}
-  #lgrid{max-width:420px;margin:0 auto;padding:0 16px}
+  #lgrid,#chgrid{max-width:420px;margin:0 auto;padding:0 16px}
   .lrow{position:relative;display:grid;grid-template-columns:repeat(5,1fr);height:64px;align-items:center}
   .lband{position:absolute;left:0;top:11px;height:48px;border-radius:24px;background:#2d304b}
-  #lgrid{position:relative}
+  #lgrid,#chgrid{position:relative}
+  .lnext{margin:18px auto 150px;width:fit-content;max-width:100%;background:#2a2d47;color:#a9b0ff;padding:15px 22px;border-radius:30px;font-size:14px;text-align:center;white-space:nowrap}
+  html[data-theme=light] .lnext{background:#fff;color:#5b66e8}
   .ltrail{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
   .ltrail path{fill:none;stroke:#2d304b;stroke-width:40;stroke-linecap:round;stroke-linejoin:round}
   html[data-theme=light] .ltrail path{stroke:#dadef8}
@@ -139,11 +154,19 @@
   .lv.done{color:#fff}
   .lv.sel span{background:radial-gradient(circle at 35% 30%,#a58bff,#7554ee);color:#fff;box-shadow:0 0 22px rgba(139,108,255,.65)}
   .lv.sel{color:#fff}
-  #lplay{position:fixed;left:0;right:0;bottom:calc(86px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:6px;z-index:8;pointer-events:none;padding:34px 0 14px;background:linear-gradient(to bottom,rgba(29,31,46,0),#1d1f2e 38%)}
+  #lplay{position:fixed;left:0;right:0;bottom:calc(100px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:8px;z-index:8;pointer-events:none;padding:34px 0 18px;background:linear-gradient(to bottom,rgba(29,31,46,0),#1d1f2e 38%)}
   html[data-theme=light] #lplay{background:linear-gradient(to bottom,rgba(241,242,251,0),#f1f2fb 38%)}
   #lplay[hidden]{display:none}
   #lplay *{pointer-events:auto}
   #lplay .big{width:min(220px,60vw);flex-direction:row;justify-content:center;background:linear-gradient(180deg,#9aa3ff,#7f89f5);color:#1e1f2e;border-color:rgba(255,255,255,.3);box-shadow:0 4px 0 #4b53b8,0 10px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.35);padding:13px}
+  .lbtns{display:flex;align-items:center;justify-content:center;gap:18px;pointer-events:auto}
+  #lplay .big{width:auto;min-width:150px;padding:13px 22px;gap:8px}
+  #lplay .big svg{width:18px;height:18px;fill:currentColor;stroke:none}
+  #ctimer{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:3;pointer-events:none;background:rgba(42,45,71,.92);color:#e4e6ff;padding:5px 16px;border-radius:16px;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  #ctimer[hidden]{display:none}
+  #ctimer.low{color:#ff6b7a}
+  html[data-theme=light] #ctimer{background:rgba(255,255,255,.92);color:#2a2d47}
+  html[data-theme=light] #ctimer.low{color:#d6334a}
   #linfo{font-size:13px;opacity:.8;pointer-events:none!important}
   .avwrap{position:relative;width:96px;height:96px;margin:4px auto 22px}
   .av{width:96px;height:96px;border-radius:50%;background:#2a2d47;display:flex;align-items:center;justify-content:center;font-size:48px;padding:0;border:2px solid rgba(165,175,255,.25)}
@@ -263,7 +286,7 @@
         <div id="status"></div>
     <div id="roomline"></div>
   </header>
-  <div id="wrap"><canvas id="c"></canvas></div>
+  <div id="wrap"><div id="ctimer" hidden></div><canvas id="c"></canvas></div>
 </div>
 
 <div id="lobby" hidden>
@@ -315,10 +338,13 @@
 </div>
 
 <div id="levels" class="scr" hidden>
-  <div class="stitle">Levels</div>
-  <div id="lgrid"></div>
+  <div id="lhead"><button data-p="levels" class="on">Levels</button><button data-p="challenge">Challenge</button></div>
+  <div id="lpager">
+    <section id="plv"><div id="lgrid"></div></section>
+    <section id="pchal"><div id="lsub">Beat the clock to unlock the next level</div><div id="chgrid"></div></section>
+  </div>
 </div>
-<div id="lplay" hidden><div id="linfo"></div><button class="big" id="lgo">Play</button></div>
+<div id="lplay" hidden><div id="linfo"></div><div class="lbtns"><button class="big" id="lgo">Continue <svg viewBox="0 0 24 24"><path d="M3 11.2 21 3l-5.6 18-3.6-6.6z"/></svg></button></div></div>
 
 <div id="profile" class="scr" hidden>
   <div class="stitle">Profile</div>
@@ -402,10 +428,10 @@ const ITEMS = [
 const RARITY = {Common:{w:60,c:'#8a8fc4'}, Rare:{w:25,c:'#4dd0ff'}, Epic:{w:11,c:'#c77dff'}, Legendary:{w:4,c:'#ffd166'}};
 let owned = store.get('arrow-coll', []).filter(id => ITEMS.some(i => i[0] === id));
 let lastDrop = null;
-function rollDrop(){
+function rollDrop(chance = 0.35){
   lastDrop = null;
   const left = ITEMS.filter(i => !owned.includes(i[0]));
-  if (!left.length || Math.random() > 0.35) return;               // roughly 1 win in 3 drops something
+  if (!left.length || Math.random() > chance) return;               // roughly 1 win in 3 drops something
   let r = Math.random() * left.reduce((t,i) => t + RARITY[i[3]].w, 0);
   for (const i of left){ r -= RARITY[i[3]].w; if (r <= 0){ lastDrop = i; break; } }
   lastDrop = lastDrop || left[left.length-1];
@@ -428,6 +454,32 @@ let lvBoard = 1;                                               // every play (an
 let levelMode = null;                                          // null = random solo / online, number = playing that level
 let lvCur = Math.max(1, store.get('arrow-level', 1) | 0);      // highest unlocked level
 let lvSel = lvCur, lastWin = false;
+// two separate progress tracks: normal Levels and timed Challenge levels
+const tracks = {levels:{cur:0, sel:0}, challenge:{cur:Math.max(1, store.get('arrow-chal', 1) | 0), sel:0}};
+tracks.challenge.sel = tracks.challenge.cur;
+let lvTrack = 'levels';
+function setTrack(t){
+  if (t === lvTrack) return;
+  tracks[lvTrack].cur = lvCur; tracks[lvTrack].sel = lvSel;
+  lvTrack = t; lvCur = tracks[t].cur; lvSel = tracks[t].sel;
+}
+let chal = false, chalEnd = 0, chalTimer = 0;                  // Try Challenge: timed level
+const CHAL_SEC = {Easy:1.6, Medium:1.5, Hard:1.3, Nightmare:1.1};   // seconds allowed per arrow, tightens a little with every level
+const APPROX = {Easy:33, Medium:54, Hard:135, Nightmare:337};        // typical arrow count per difficulty
+function chalSecs(n){ const d = levelDiff(n); return Math.max(20, Math.round(APPROX[d] * CHAL_SEC[d] * Math.max(0.7, 1 - 0.008 * (n - 1)) / 5) * 5); }
+const fmtTime = t => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+function stopChallenge(){ clearInterval(chalTimer); chalTimer = 0; $('ctimer').hidden = true; }
+function startChallenge(){
+  stopChallenge();
+  const secs = chalSecs(levelMode);
+  chalEnd = performance.now() + secs * 1000;
+  const tick = () => {
+    const left = Math.max(0, Math.ceil((chalEnd - performance.now()) / 1000));
+    $('ctimer').textContent = fmtTime(left); $('ctimer').classList.toggle('low', left <= 10);
+    if (left <= 0 && !over){ finish(true, 'Time is up!'); }
+  };
+  $('ctimer').hidden = false; tick(); chalTimer = setInterval(tick, 200);
+}
 const SIZES = {Easy:10, Medium:14, Hard:22, Nightmare:34};
 const $ = id => document.getElementById(id);
 const cv = $('c'), ctx = cv.getContext('2d');
@@ -671,6 +723,7 @@ function newGame(){
   const count = +m;
   players = Array.from({length:count}, (_,i) => ({name: count===1 ? 'You' : 'Player '+(i+1), hearts:3, score:0}));
   turn = 0; team = null;
+  if (lv && chal) startChallenge(); else stopChallenge();
   updateUI();
   setStatus(count===1 ? 'Tap an arrow to slide it out.' : 'Player 1 starts. Right move = keep your turn. Blocked = lose a heart and the turn passes.');
 }
@@ -776,15 +829,15 @@ function tap(a){
   updateUI();
 }
 
-function finish(lost){
-  over = true; updateUI();
+function finish(lost, msg){
+  over = true; stopChallenge(); updateUI();
   lastWin = !lost; lastDrop = null;
   const firstClear = levelMode != null && !lost && levelMode >= lvCur;     // collectibles drop only the first time a level is cleared
-  if (firstClear){ rollDrop(); lvCur = levelMode + 1; store.set('arrow-level', lvCur); }
+  if (firstClear){ rollDrop(chal ? 0.7 : 0.35); lvCur = levelMode + 1; store.set(lvTrack === 'challenge' ? 'arrow-chal' : 'arrow-level', lvCur); }
   if (players.length === 1){
     setStatus(lost ? 'Out of hearts. Tap New to try again.' : 'Cleared! Tap New for another board.');
     const hl = players[0].hearts;
-    if (lost) showEnd(false, 'You Lost', '', 700);
+    if (lost) showEnd(false, msg || 'You Lost', '', 700);
     else showEnd(true, 'Congratulations! You Won', '', 800);
   } else {
     const best = Math.max(...players.map(p=>p.score));
@@ -874,32 +927,66 @@ function hideEnd(){
 }
 
 
+let lvPage = 'levels';                                         // which page of the Level section is showing: 'levels' or 'challenge'
+function refreshLevelsUI(){
+  document.querySelectorAll('#lhead button').forEach(b => b.classList.toggle('on', b.dataset.p === lvPage));
+  $('lgo').innerHTML = lvPage === 'challenge'
+    ? 'Start Challenge <svg viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8" /><path d="M12 5.5V2M9.5 2h5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 9v5l3 2" stroke="#7f89f5" stroke-width="2" fill="none" stroke-linecap="round"/></svg>'
+    : 'Continue <svg viewBox="0 0 24 24"><path d="M3 11.2 21 3l-5.6 18-3.6-6.6z"/></svg>';
+  $('linfo').textContent = infoText(lvSel);
+}
+function showPage(page, smooth){
+  const pg = $('lpager');
+  pg.style.scrollBehavior = smooth ? 'smooth' : 'auto';
+  pg.scrollTo({left: page === 'challenge' ? pg.clientWidth : 0, behavior: smooth ? 'smooth' : 'auto'});
+}
+{ let raf = 0;
+  $('lpager').addEventListener('scroll', () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const pg = $('lpager'); if ($('levels').hidden || !pg.clientWidth) return;
+      const page = pg.scrollLeft > pg.clientWidth / 2 ? 'challenge' : 'levels';
+      if (page !== lvPage){ lvPage = page; setTrack(page); refreshLevelsUI(); haptic(8); }
+    });
+  }, {passive:true});
+  document.querySelectorAll('#lhead button').forEach(b => b.onclick = () => showPage(b.dataset.p, true));
+}
+
 function showScreen(name){
-  for (const id of ['home','levels','profile']) $(id).hidden = id !== name;
+  if (name) stopChallenge();
+  if (name === 'challenge'){ lvPage = 'challenge'; name = 'levels'; }
+  const isLv = name === 'levels';
+  $('home').hidden = name !== 'home'; $('profile').hidden = name !== 'profile'; $('levels').hidden = !isLv;
   $('tabs').hidden = !name;
-  $('lplay').hidden = name !== 'levels';
+  $('lplay').hidden = !isLv;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.t === name));
-  if (name === 'levels') renderLevels();
+  if (isLv){
+    setTrack(lvPage);
+    renderLevels();
+    showPage(lvPage, false);
+  }
   if (name === 'profile') renderProfile();
 }
 
 function goHome(tab){
   hideEnd();
   if (room) leaveRoom();                                         // leaving an online room closes it for you
-  if (tab !== 'levels') levelMode = null;
-  showScreen(tab === 'levels' ? 'levels' : 'home');
+  const lv = tab === 'levels' || tab === 'challenge';
+  if (!lv) levelMode = null;
+  showScreen(lv ? tab : 'home');
 }
 
 function startFromHome(m){
-  levelMode = null;
+  levelMode = null; chal = false;
   if (m === '1'){ pickDifficulty(() => { showScreen(null); $('mode').value = '1'; newGame(); }); return; }   // Solo: random board, choose difficulty first
   showScreen(null);
   $('mode').value = m; refreshPills();
   $('mode').onchange();                                          // online: opens the room card
 }
 
-function startLevel(n){
-  levelMode = n; lvSel = n; lvBoard = newSeed();
+function startLevel(n, challenge = false){
+  setTrack(challenge ? 'challenge' : 'levels'); lvPage = challenge ? 'challenge' : 'levels';
+  levelMode = n; lvSel = n; lvBoard = newSeed(); chal = challenge;
   showScreen(null);
   $('mode').value = '1';
   if (room) leaveRoom();
@@ -924,11 +1011,13 @@ function drawTrail(g, rows){
   path.setAttribute('d', d); svg.appendChild(path);
   g.insertBefore(svg, g.firstChild);
 }
-window.addEventListener('resize', () => { if (!$('levels').hidden) renderLevels(); });
+window.addEventListener('resize', () => { if (!$('levels').hidden){ renderLevels(); showPage(lvPage, false); } });
 
-function renderLevels(){
+const infoText = i => 'Level ' + i + ' \u00B7 ' + levelDiff(i) + (lvTrack === 'challenge' ? ' \u00B7 ' + fmtTime(chalSecs(i)) : '');
+
+function renderOne(g, pane){
   const total = Math.max(35, Math.ceil((lvCur + 14) / 5) * 5);
-  const g = $('lgrid'); g.innerHTML = '';
+  g.innerHTML = '';
   if (lvSel > lvCur) lvSel = lvCur;
   for (let r = 0; r < total / 5; r++){
     const row = document.createElement('div'); row.className = 'lrow';
@@ -942,15 +1031,23 @@ function renderLevels(){
         if (i > lvCur) return;
         lvSel = i; haptic(10);
         g.querySelectorAll('.sel').forEach(e => e.classList.remove('sel')); b.classList.add('sel');
-        $('linfo').textContent = 'Level ' + i + ' \u00B7 ' + levelDiff(i);
+        $('linfo').textContent = infoText(i);
       };
       row.appendChild(b);
     }
     g.appendChild(row);
   }
   drawTrail(g, total / 5);
-  $('linfo').textContent = 'Level ' + lvSel + ' \u00B7 ' + levelDiff(lvSel);
-  const sel = g.querySelector('.sel'); if (sel) sel.scrollIntoView({block:'center'});
+  const nx = document.createElement('div'); nx.className = 'lnext'; nx.textContent = 'Level ' + (total + 1) + ' will be unlocked automatically!'; g.appendChild(nx);
+  const sel = g.querySelector('.sel');
+  if (sel) pane.scrollTop = sel.getBoundingClientRect().top - pane.getBoundingClientRect().top + pane.scrollTop - pane.clientHeight / 2;
+}
+function renderLevels(){
+  const keep = lvTrack;
+  setTrack('challenge'); renderOne($('chgrid'), $('pchal'));
+  setTrack('levels');    renderOne($('lgrid'), $('plv'));
+  setTrack(keep);
+  refreshLevelsUI();
 }
 
 function renderProfile(){
@@ -1006,7 +1103,7 @@ $('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + 
 $('privRow').onclick = () => openModal('<h3>Privacy Policy</h3><p>Arrow Escape stores your username, avatar, settings and level progress only on your device. Online co-op shares anonymous game moves with your friend through a temporary room code. We do not collect personal information, show ads or track you.</p>');
 $('termRow').onclick = () => openModal('<h3>Terms of Use</h3><p>Arrow Escape is a free game provided as is, without warranties. Please play fair in online rooms. Your progress is saved on this device and may be lost if you clear the app data.</p>');
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => { haptic(10); showScreen(t.dataset.t); });
-$('lgo').onclick = () => startLevel(lvSel);
+$('lgo').onclick = () => startLevel(lvSel, lvTrack === 'challenge');
 
 $('enew').onclick = () => {
   hideEnd();
@@ -1014,7 +1111,7 @@ $('enew').onclick = () => {
   if (levelMode != null){ if (lastWin) { levelMode++; lvSel = levelMode; } lvBoard = newSeed(); newGame(); return; }
   newGame();
 };
-$('ehome').onclick = () => goHome(levelMode != null ? 'levels' : 'home');
+$('ehome').onclick = () => goHome(levelMode != null ? (chal ? 'challenge' : 'levels') : 'home');
 document.querySelectorAll('#home .big').forEach(b => {
   b.onclick = () => startFromHome(b.dataset.m);
   b.addEventListener('pointerdown', () => haptic(10));
@@ -1284,7 +1381,7 @@ $('diffBtn').onclick = () => openPicker('diff');
 $('modeBtn').onclick = () => openPicker('mode');
 $('pcancel').onclick = () => { $('picker').hidden = true; };
 $('picker').onclick = e => { if (e.target === $('picker')) $('picker').hidden = true; };
-$('back').onclick = () => goHome(levelMode != null ? 'levels' : 'home');
+$('back').onclick = () => goHome(levelMode != null ? (chal ? 'challenge' : 'levels') : 'home');
 $('new').onclick = () => { if (!room && levelMode != null) lvBoard = newSeed(); room ? restartOnline() : newGame(); };
 $('diff').onchange = () => room ? restartOnline() : newGame();
 $('mode').onchange = () => {
@@ -1393,7 +1490,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.38.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.41.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
