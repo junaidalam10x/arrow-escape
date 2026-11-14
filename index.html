@@ -126,24 +126,25 @@
   .tab.on{color:#e4e6ff;background:none}
   .tab.on svg{color:#a9b0ff}
   .tab:active{background:none;color:#c5cbff}
-  #lgrid{max-width:420px;margin:0 auto}
-  .lrow{position:relative;display:grid;grid-template-columns:repeat(5,1fr);height:70px;align-items:center;margin-bottom:8px}
+  #lgrid{max-width:420px;margin:0 auto;padding:0 16px}
+  .lrow{position:relative;display:grid;grid-template-columns:repeat(5,1fr);height:64px;align-items:center}
   .lband{position:absolute;left:0;top:11px;height:48px;border-radius:24px;background:#2d304b}
   #lgrid{position:relative}
   .ltrail{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
-  .ltrail path{fill:none;stroke:#2d304b;stroke-width:48;stroke-linecap:round;stroke-linejoin:round}
+  .ltrail path{fill:none;stroke:#2d304b;stroke-width:40;stroke-linecap:round;stroke-linejoin:round}
   html[data-theme=light] .ltrail path{stroke:#dadef8}
-  .lv{position:relative;z-index:1;width:100%;height:70px;padding:0;background:none;border-radius:0;font-size:21px;font-weight:500;color:#a39fd6;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
+  .lv{position:relative;z-index:1;width:100%;height:64px;padding:0;background:none;border-radius:0;font-size:18px;font-weight:500;color:#a39fd6;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
   .lv:active{background:none}
-  .lv span{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%}
+  .lv span{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%}
   .lv.done{color:#fff}
   .lv.sel span{background:radial-gradient(circle at 35% 30%,#a58bff,#7554ee);color:#fff;box-shadow:0 0 22px rgba(139,108,255,.65)}
   .lv.sel{color:#fff}
-  #lplay{position:fixed;left:0;right:0;bottom:calc(106px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:6px;z-index:8;pointer-events:none}
+  #lplay{position:fixed;left:0;right:0;bottom:calc(86px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:6px;z-index:8;pointer-events:none;padding:34px 0 14px;background:linear-gradient(to bottom,rgba(29,31,46,0),#1d1f2e 38%)}
+  html[data-theme=light] #lplay{background:linear-gradient(to bottom,rgba(241,242,251,0),#f1f2fb 38%)}
   #lplay[hidden]{display:none}
   #lplay *{pointer-events:auto}
   #lplay .big{width:min(220px,60vw);flex-direction:row;justify-content:center;background:linear-gradient(180deg,#9aa3ff,#7f89f5);color:#1e1f2e;border-color:rgba(255,255,255,.3);box-shadow:0 4px 0 #4b53b8,0 10px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.35);padding:13px}
-  #linfo{font-size:13px;opacity:.8;background:#1d1f2e;padding:2px 12px;border-radius:10px;pointer-events:none!important}
+  #linfo{font-size:13px;opacity:.8;pointer-events:none!important}
   .avwrap{position:relative;width:96px;height:96px;margin:4px auto 22px}
   .av{width:96px;height:96px;border-radius:50%;background:#2a2d47;display:flex;align-items:center;justify-content:center;font-size:48px;padding:0;border:2px solid rgba(165,175,255,.25)}
   .avedit{position:absolute;right:-2px;bottom:-2px;width:30px;height:30px;border-radius:50%;background:#8f98ff;display:flex;align-items:center;justify-content:center;pointer-events:none}
@@ -252,7 +253,7 @@
       <button id="modeBtn" class="pill"></button>
       <button id="hint" class="ib" aria-label="Hint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></button>
       <select id="diff" hidden>
-        <option selected>Medium</option><option>Hard</option><option>Nightmare</option>
+        <option>Easy</option><option selected>Medium</option><option>Hard</option><option>Nightmare</option>
       </select>
       <select id="mode" hidden>
         <option value="1">Solo</option>
@@ -412,13 +413,22 @@ function rollDrop(){
 }
 
 /* ---------- levels: endless, mixed difficulty, same board for everyone ---------- */
-const LV_CYCLE = ['Medium','Medium','Hard','Medium','Hard','Medium','Hard','Hard','Medium','Nightmare'];
-const levelDiff = n => LV_CYCLE[(n-1) % LV_CYCLE.length];
+// Difficulty of each level: fixed per level number (same label every time), but scattered randomly.
+// Level 1 is always Easy, Nightmare never shows up before level 16.
+function levelDiff(n){
+  if (n <= 1) return 'Easy';
+  const r = mulberry32(n * 7919 + 13)();
+  const w = n <= 5 ? [.70,.30,0,0] : n <= 15 ? [.25,.45,.30,0] : [.10,.30,.35,.25];
+  const names = ['Easy','Medium','Hard','Nightmare'];
+  let acc = 0;
+  for (let k = 0; k < 4; k++){ acc += w[k]; if (r < acc) return names[k]; }
+  return names[names.length - 1];
+}
 let lvBoard = 1;                                               // every play (and every retry) gets a brand new pattern
 let levelMode = null;                                          // null = random solo / online, number = playing that level
 let lvCur = Math.max(1, store.get('arrow-level', 1) | 0);      // highest unlocked level
 let lvSel = lvCur, lastWin = false;
-const SIZES = {Medium:14, Hard:22, Nightmare:34};
+const SIZES = {Easy:10, Medium:14, Hard:22, Nightmare:34};
 const $ = id => document.getElementById(id);
 const cv = $('c'), ctx = cv.getContext('2d');
 
@@ -484,7 +494,8 @@ function genClassic(n, rng = Math.random){
 const HARD = {
   Hard:      {minLen:2, maxLen:6, straight:0.45, longBias:0.9, refill:2},
   Nightmare: {minLen:2, maxLen:6, straight:0.40, longBias:0.9, refill:2},
-  Medium:    {minLen:2, maxLen:6, straight:0.50, longBias:0.95, refill:1}
+  Medium:    {minLen:2, maxLen:6, straight:0.50, longBias:0.95, refill:1},
+  Easy:      {minLen:2, maxLen:4, straight:0.70, longBias:0.55, refill:1}
 };
 
 function genDense(n, rng, cfg){
@@ -589,7 +600,13 @@ function genDense(n, rng, cfg){
 }
 
 function generate(n, rng = Math.random, lvl = 'Medium'){
-  return HARD[lvl] ? genDense(n, rng, HARD[lvl]) : genClassic(n, rng);
+  if (!HARD[lvl]) return genClassic(n, rng);
+  let g;
+  for (let t = 0; t < 8; t++){                     // retry (same rng stream, so still identical on both phones) until no cell is left blank
+    g = genDense(n, rng, HARD[lvl]);
+    if (!g.o.some(v => v === -1)) break;
+  }
+  return g;
 }
 
 function canExit(a){
@@ -665,8 +682,13 @@ const maxScale = () => Math.max(3, 70/cs);          // zoom in: 3x on small boar
 
 function clampView(){
   const size = N*cs*view.s;
-  view.ox = size <= W ? (W-size)/2 : Math.min(0, Math.max(W-size, view.ox));
-  view.oy = size <= H ? (H-size)/2 : Math.min(0, Math.max(H-size, view.oy));
+  const m = Math.min(110, size / 3);                 // free dragging: the board may leave the screen, but a corner always stays in reach
+  view.ox = Math.min(W - m, Math.max(m - size, view.ox));
+  view.oy = Math.min(H - m, Math.max(m - size, view.oy));
+}
+function centerView(){
+  const size = N*cs*view.s;
+  view.ox = (W-size)/2; view.oy = (H-size)/2;
 }
 
 function layout(reset = true){
@@ -677,6 +699,7 @@ function layout(reset = true){
   cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
   cs = Math.max((Math.min(W,H) - 12) / N, 4);        // whole board fits any screen
   view.s = reset ? 1 : Math.min(maxScale(), Math.max(MINZ, view.s));
+  if (reset) centerView();
   clampView();
 }
 
@@ -884,15 +907,16 @@ function startLevel(n){
 }
 
 function drawTrail(g, rows){
-  const W = g.clientWidth, cw = W / 5, PITCH = 78, H = rows * PITCH;
-  const pt = i => { const r = Math.floor((i - 1) / 5), k = (i - 1) % 5, c = r % 2 ? 4 - k : k; return [(c + .5) * cw, r * PITCH + 35, r]; };
+  const PAD = 16, PITCH = 64, R = PITCH / 2;                   // row pitch = turn diameter, so the inside of each turn is a clean half-circle
+  const W = g.clientWidth, cw = (W - PAD * 2) / 5, H = rows * PITCH;
+  const pt = i => { const r = Math.floor((i - 1) / 5), k = (i - 1) % 5, c = r % 2 ? 4 - k : k; return [PAD + (c + .5) * cw, r * PITCH + R, r]; };
   if (lvCur < 2 || !W) return;
   let d = '', prev = null;
   for (let i = 1; i <= lvCur; i++){
     const [x, y, r] = pt(i);
     if (!prev) d += 'M' + x + ' ' + y;
     else if (prev[2] === r) d += 'L' + x + ' ' + y;
-    else d += 'A12 ' + (PITCH / 2) + ' 0 0 ' + (prev[2] % 2 ? 0 : 1) + ' ' + x + ' ' + y;   // U-turn at the end of a row
+    else d += 'A' + R + ' ' + R + ' 0 0 ' + (prev[2] % 2 ? 0 : 1) + ' ' + x + ' ' + y;   // U-turn at the end of a row
     prev = [x, y, r];
   }
   const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
@@ -1170,7 +1194,7 @@ function handleTap(px, py){
   if (id === -1){                                   // double-tap empty space: zoom in / back to fit
     const now = performance.now();
     if (lastEmpty && now-lastEmpty.t < 350 && Math.hypot(px-lastEmpty.x, py-lastEmpty.y) < 40){
-      if (Math.abs(view.s - 1) > 0.05){ view.s = 1; clampView(); } else zoomAt(px, py, Math.min(maxScale(), 2.6));
+      if (Math.abs(view.s - 1) > 0.05 || Math.hypot(view.ox - (W-N*cs*view.s)/2, view.oy - (H-N*cs*view.s)/2) > 6){ view.s = 1; centerView(); clampView(); } else zoomAt(px, py, Math.min(maxScale(), 2.6));
       lastEmpty = null;
     } else lastEmpty = {t:now, x:px, y:py};
     return;
@@ -1369,7 +1393,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.36.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.38.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
