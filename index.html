@@ -42,7 +42,7 @@
   .row .ib{flex:0 0 42px;width:42px;font-size:17px}
   .row .ib svg{width:20px;height:19px;stroke-width:2.1}
   .row #back{flex:0 0 34px;width:34px;background:none;justify-content:flex-start}
-  .row #back svg{width:24px;height:24px;stroke:#fff;stroke-width:1.7}
+  .row #back svg{width:24px;height:24px;stroke:#8f98ff;stroke-width:1.7}
   .row .pill{flex:1 1 0;min-width:0;max-width:none}
   #players{margin:0}
   .row{justify-content:center;gap:16px}
@@ -50,6 +50,7 @@
   .row button{height:36px;border-radius:11px}
   .row .ib{flex:0 0 46px;width:46px}
   .row .ib svg{width:22px;height:21px}
+  #hint svg,#new svg{stroke:#8f98ff;stroke-width:1.9}
   .row #back{flex:0 0 28px;width:28px;justify-content:center}
   .row #back svg{width:28px;height:28px}
   .row #players .pl{margin:0}
@@ -125,11 +126,19 @@
   .tab.on{color:#e4e6ff;background:none}
   .tab.on svg{color:#a9b0ff}
   .tab:active{background:none;color:#c5cbff}
-  #lgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:420px;margin:0 auto}
-  .lv{aspect-ratio:1;padding:0;border-radius:14px;font-size:18px;font-weight:600;background:#2a2d47;color:#c5cbff;border:2px solid transparent;touch-action:manipulation}
-  .lv.done{background:#33376a}
-  .lv.sel{border-color:#8f98ff;background:#454b78;color:#fff}
-  .lv.lock{opacity:.3}
+  #lgrid{max-width:420px;margin:0 auto}
+  .lrow{position:relative;display:grid;grid-template-columns:repeat(5,1fr);height:70px;align-items:center;margin-bottom:8px}
+  .lband{position:absolute;left:0;top:11px;height:48px;border-radius:24px;background:#2d304b}
+  #lgrid{position:relative}
+  .ltrail{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+  .ltrail path{fill:none;stroke:#2d304b;stroke-width:48;stroke-linecap:round;stroke-linejoin:round}
+  html[data-theme=light] .ltrail path{stroke:#dadef8}
+  .lv{position:relative;z-index:1;width:100%;height:70px;padding:0;background:none;border-radius:0;font-size:21px;font-weight:500;color:#a39fd6;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
+  .lv:active{background:none}
+  .lv span{display:flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%}
+  .lv.done{color:#fff}
+  .lv.sel span{background:radial-gradient(circle at 35% 30%,#a58bff,#7554ee);color:#fff;box-shadow:0 0 22px rgba(139,108,255,.65)}
+  .lv.sel{color:#fff}
   #lplay{position:fixed;left:0;right:0;bottom:calc(106px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:6px;z-index:8;pointer-events:none}
   #lplay[hidden]{display:none}
   #lplay *{pointer-events:auto}
@@ -142,6 +151,9 @@
   .list{max-width:420px;margin:0 auto 16px;background:#2a2d47;border-radius:18px;overflow:hidden}
   .li{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border-radius:0;padding:16px 18px;font-size:16px;color:#e4e6ff;text-align:left;border-top:1px solid rgba(165,175,255,.1)}
   .li:first-child{border-top:0}
+  .lt{display:flex;align-items:center;gap:14px;font-weight:400}
+  .lt svg{width:22px;height:22px;fill:none;stroke:#8f98ff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+  html[data-theme=light] .lt svg{stroke:#5b66e8}
   .li span{opacity:.6;font-size:15px}
   .li .chev{opacity:.5}
   .tg{width:46px;height:27px;border-radius:14px;background:#3c3d6c;position:relative;flex:0 0 auto;transition:background .18s}
@@ -172,10 +184,15 @@
   #endcard.bare .ebig{font-size:84px}
   #endcard.bare h3{font-size:30px;text-shadow:0 2px 14px rgba(0,0,0,.55)}
   #endcard.bare #esub{text-shadow:0 2px 10px rgba(0,0,0,.55)}
+  #pcancel,#pcancel:active,html[data-theme=light] #pcancel,html[data-theme=light] #pcancel:active{background:none;box-shadow:none;color:#8a8fc4}
+  #pcancel:active{color:#c5cbff}
   .btns{display:flex;gap:12px;margin-top:6px}
   .card h3{font-size:20px}
   #endcard .card{gap:14px}
   .ebig{margin-bottom:2px}
+  .tro{width:56px;height:56px;fill:none;stroke:#8f98ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 10px rgba(143,152,255,.45))}
+  #endcard.bare .tro{width:104px;height:104px}
+  html[data-theme=light] .tro{stroke:#5b66e8}
   #popts{gap:12px}
   .btns button{flex:1 1 0;min-width:0;padding:14px 8px;font-size:16px}
   .btns button[hidden]{display:none}
@@ -187,10 +204,11 @@
   html[data-theme=light] button:active{background:#d0d3ee}
   html[data-theme=light] .pl{border-color:rgba(60,70,160,.35)}
   html[data-theme=light] .pl.solo svg,html[data-theme=light] .ib svg{stroke:#2a2d47}
+  html[data-theme=light] #hint svg,html[data-theme=light] #new svg{stroke:#5b66e8}
   html[data-theme=light] .pl.solo .dv{background:rgba(60,70,160,.35)}
   html[data-theme=light] .row button{background:#dfe2f5}
   html[data-theme=light] .row #back{background:none}
-  html[data-theme=light] .row #back svg{stroke:#2a2d47}
+  html[data-theme=light] .row #back svg{stroke:#5b66e8}
   html[data-theme=light] .hl svg{stroke:#6a72b8}
   html[data-theme=light] .card{background:#fff;color:#2a2d47;box-shadow:0 10px 30px rgba(40,50,120,.18)}
   html[data-theme=light] #lobby,html[data-theme=light] #picker,html[data-theme=light] #modal{background:rgba(241,242,251,.88)}
@@ -207,9 +225,10 @@
   html[data-theme=light] .tab,html[data-theme=light] .tab:active{color:#9aa0cc;background:none}
   html[data-theme=light] .tab.on{color:#2a2d47;background:none}
   html[data-theme=light] .tab.on svg{color:#5b66e8}
-  html[data-theme=light] .lv{background:#fff;color:#2a2d47}
-  html[data-theme=light] .lv.done{background:#dfe2f8}
-  html[data-theme=light] .lv.sel{background:#d5d9fb;border-color:#5b66e8;color:#2a2d47}
+  html[data-theme=light] .lv{background:none;color:#8a8fc4}
+  html[data-theme=light] .lv.done{background:none;color:#2a2d47}
+  html[data-theme=light] .lband{background:#dadef8}
+  html[data-theme=light] .lv.sel{background:none;border:0;color:#fff}
   html[data-theme=light] .av{background:#fff;border-color:rgba(60,70,160,.25)}
   html[data-theme=light] .avedit{background:#5b66e8}
   html[data-theme=light] .avedit svg{stroke:#fff}
@@ -231,7 +250,7 @@
       <div id="players"></div>
       <button id="diffBtn" class="pill"></button>
       <button id="modeBtn" class="pill"></button>
-      <button id="hint" class="ib" aria-label="Hint">&#128161;</button>
+      <button id="hint" class="ib" aria-label="Hint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg></button>
       <select id="diff" hidden>
         <option selected>Medium</option><option>Hard</option><option>Nightmare</option>
       </select>
@@ -304,19 +323,19 @@
   <div class="stitle">Profile</div>
   <div class="avwrap"><button class="av" id="avbtn" aria-label="Change avatar"></button><div class="avedit"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></div></div>
   <div class="list">
-    <button class="li" id="nameRow">Username<span id="nameVal"></span></button>
+    <button class="li" id="nameRow"><b class="lt"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Username</b><span id="nameVal"></span></button>
   </div>
   <div class="list">
-    <button class="li" id="darkRow">Dark mode<i class="tg" id="darkTg"></i></button>
-    <button class="li" id="vibRow">Vibrations<i class="tg" id="vibTg"></i></button>
-    <button class="li" id="sndRow">Sounds<i class="tg" id="sndTg"></i></button>
+    <button class="li" id="darkRow"><b class="lt"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>Dark mode</b><i class="tg" id="darkTg"></i></button>
+    <button class="li" id="vibRow"><b class="lt"><svg viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8M1.5 10.5v3M22.5 10.5v3"/></svg>Vibrations</b><i class="tg" id="vibTg"></i></button>
+    <button class="li" id="sndRow"><b class="lt"><svg viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>Sounds</b><i class="tg" id="sndTg"></i></button>
   </div>
   <div class="list">
-    <button class="li" id="collRow">Collection<span id="collVal"></span></button>
+    <button class="li" id="collRow"><b class="lt"><svg viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1.5A3 3 0 0 0 7 10.5M17 6h3v1.5a3 3 0 0 1-3 3M12 14v4M8.5 20h7"/></svg>Collection</b><span id="collVal"></span></button>
   </div>
   <div class="list">
-    <button class="li" id="privRow">Privacy Policy<span class="chev">&rsaquo;</span></button>
-    <button class="li" id="termRow">Terms of Use<span class="chev">&rsaquo;</span></button>
+    <button class="li" id="privRow"><b class="lt"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v5.5c0 4.6-3.2 8-8 9.5-4.8-1.5-8-4.9-8-9.5V6z"/><path d="M9 12l2.2 2.2L15.5 10"/></svg>Privacy Policy</b><span class="chev">&rsaquo;</span></button>
+    <button class="li" id="termRow"><b class="lt"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Terms of Use</b><span class="chev">&rsaquo;</span></button>
   </div>
   <div id="social">
     <a href="https://github.com/junaidalam10x" target="_blank" rel="noopener" aria-label="GitHub"><svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.921.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
@@ -757,6 +776,7 @@ function finish(lost){
 /* ---------- result card, confetti and home screen ---------- */
 const cf = $('confetti'), cfx = cf.getContext('2d');
 let parts = [], cfRAF = 0, cfLast = 0, endTimer = 0, nextTimer = 0;
+const TROPHY = '<svg class="tro" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1.5A3 3 0 0 0 7 10.5M17 6h3v1.5a3 3 0 0 1-3 3M12 14v4M8.5 20h7"/></svg>';
 const PRAISE = ['Marvelous!','Gorgeous!','Excellent!','Great!','Brilliant!','Fantastic!','Superb!','Awesome!','Perfect!','Amazing!'];
 
 function stopConfetti(){
@@ -810,7 +830,7 @@ function showEnd(win, title, sub, delay){
     const guest = room && role === 'g';
     const lvWin = win && levelMode != null && !room;
     $('endcard').classList.toggle('bare', lvWin);
-    $('etrophy').textContent = win ? '\uD83C\uDFC6' : '\uD83D\uDC94';
+    if (win) $('etrophy').innerHTML = TROPHY; else $('etrophy').textContent = '\uD83D\uDC94';
     $('etitle').textContent = lvWin ? PRAISE[Math.floor(Math.random()*PRAISE.length)] : title;
     $('esub').textContent = (win && lastDrop) ? 'New collectible: ' + lastDrop[1] + ' ' + lastDrop[2] + ' (' + lastDrop[3] + ')' : (sub || (guest ? 'Waiting for the host to start a new game.' : ''));
     $('enew').hidden = !!guest || lvWin;
@@ -863,22 +883,48 @@ function startLevel(n){
   newGame();
 }
 
+function drawTrail(g, rows){
+  const W = g.clientWidth, cw = W / 5, PITCH = 78, H = rows * PITCH;
+  const pt = i => { const r = Math.floor((i - 1) / 5), k = (i - 1) % 5, c = r % 2 ? 4 - k : k; return [(c + .5) * cw, r * PITCH + 35, r]; };
+  if (lvCur < 2 || !W) return;
+  let d = '', prev = null;
+  for (let i = 1; i <= lvCur; i++){
+    const [x, y, r] = pt(i);
+    if (!prev) d += 'M' + x + ' ' + y;
+    else if (prev[2] === r) d += 'L' + x + ' ' + y;
+    else d += 'A12 ' + (PITCH / 2) + ' 0 0 ' + (prev[2] % 2 ? 0 : 1) + ' ' + x + ' ' + y;   // U-turn at the end of a row
+    prev = [x, y, r];
+  }
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
+  svg.setAttribute('class', 'ltrail'); svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  path.setAttribute('d', d); svg.appendChild(path);
+  g.insertBefore(svg, g.firstChild);
+}
+window.addEventListener('resize', () => { if (!$('levels').hidden) renderLevels(); });
+
 function renderLevels(){
   const total = Math.max(35, Math.ceil((lvCur + 14) / 5) * 5);
   const g = $('lgrid'); g.innerHTML = '';
   if (lvSel > lvCur) lvSel = lvCur;
-  for (let i = 1; i <= total; i++){
-    const b = document.createElement('button');
-    b.className = 'lv' + (i < lvCur ? ' done' : '') + (i > lvCur ? ' lock' : '') + (i === lvSel ? ' sel' : '');
-    b.textContent = i;
-    b.onclick = () => {
-      if (i > lvCur) return;
-      lvSel = i; haptic(10);
-      g.querySelectorAll('.sel').forEach(e => e.classList.remove('sel')); b.classList.add('sel');
-      $('linfo').textContent = 'Level ' + i + ' \u00B7 ' + levelDiff(i);
-    };
-    g.appendChild(b);
+  for (let r = 0; r < total / 5; r++){
+    const row = document.createElement('div'); row.className = 'lrow';
+    const first = r * 5 + 1, rev = r % 2 === 1;                  // zig-zag: odd rows run right to left
+    const lv = c => rev ? first + 4 - c : first + c;
+    for (let c = 0; c < 5; c++){
+      const i = lv(c), b = document.createElement('button');
+      b.className = 'lv' + (i < lvCur ? ' done' : '') + (i === lvSel ? ' sel' : '');
+      b.innerHTML = '<span>' + i + '</span>';
+      b.onclick = () => {
+        if (i > lvCur) return;
+        lvSel = i; haptic(10);
+        g.querySelectorAll('.sel').forEach(e => e.classList.remove('sel')); b.classList.add('sel');
+        $('linfo').textContent = 'Level ' + i + ' \u00B7 ' + levelDiff(i);
+      };
+      row.appendChild(b);
+    }
+    g.appendChild(row);
   }
+  drawTrail(g, total / 5);
   $('linfo').textContent = 'Level ' + lvSel + ' \u00B7 ' + levelDiff(lvSel);
   const sel = g.querySelector('.sel'); if (sel) sel.scrollIntoView({block:'center'});
 }
@@ -1323,7 +1369,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.32.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.36.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
