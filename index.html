@@ -127,6 +127,8 @@
   #lpager{flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   #lpager::-webkit-scrollbar{display:none}
   #lpager section{flex:0 0 100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always;overflow-y:auto;overscroll-behavior-y:contain;padding-bottom:calc(104px + env(safe-area-inset-bottom))}
+  #plv{overflow-x:hidden !important;scrollbar-width:none}
+  #plv::-webkit-scrollbar{display:none}
   #lsub{margin:0 0 10px;text-align:center;font-size:13px;color:#8a8fc4}
   .tab .ring{fill:none;stroke:currentColor;stroke-width:1.8}
   .tab.on{color:#e4e6ff;background:none}
@@ -153,8 +155,8 @@
   .lv.done{color:#fff}
   .lv.sel span{background:radial-gradient(circle at 35% 30%,#a58bff,#7554ee);color:#fff;box-shadow:0 0 22px rgba(139,108,255,.65)}
   .lv.sel{color:#fff}
-  #lactions{position:fixed;left:0;right:0;bottom:calc(100px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;z-index:8;pointer-events:none;padding:30px 0 12px;background:linear-gradient(to bottom,rgba(29,31,46,0),#1d1f2e 45%)}
-  html[data-theme=light] #lactions{background:linear-gradient(to bottom,rgba(241,242,251,0),#f1f2fb 45%)}
+  #lactions{position:fixed;left:0;right:0;bottom:calc(100px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;z-index:8;pointer-events:none;padding:12px 0;background:#1d1f2e}
+  html[data-theme=light] #lactions{background:#f1f2fb}
   #lgrid{padding-bottom:150px}
   #lgo{pointer-events:auto;background:none;border:0;box-shadow:none;color:#a5acff;font-size:22px;font-weight:800;letter-spacing:.02em;padding:6px 26px;border-radius:14px}
   #lgo:active{background:none;color:#fff}
@@ -1655,7 +1657,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.52.2'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.52.3'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
