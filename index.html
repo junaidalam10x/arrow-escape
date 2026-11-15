@@ -744,10 +744,10 @@ function genDense(n, rng, cfg, mask){
   return {o, list, blank: own.filter(v => v === -1).length, mask: mask || null};
 }
 
-function generate(n, rng = Math.random, lvl = 'Medium'){
+function generate(n, rng = Math.random, lvl = 'Medium', squareChance = 0){   // squareChance: share of boards that stay a full square (online co-op)
   if (!HARD[lvl]) return genClassic(n, rng);
   let g;
-  const mask = makeMask(n, rng);                   // random silhouette for this board
+  const mask = (squareChance && rng() < squareChance) ? null : makeMask(n, rng);   // random silhouette for this board (or a full square)
   for (let t = 0; t < 8; t++){                     // retry (same rng stream, so still identical on both phones) until no cell inside the shape is left blank
     g = genDense(n, rng, HARD[lvl], mask);
     if (!g.blank) break;
@@ -1345,7 +1345,7 @@ function startOnline(m){
   gameUnsubs.forEach(u => u()); gameUnsubs = [];
   gen = m.gen; applied = 0; N = m.size; maxH = 5;
   team = {hearts:5, h:0, g:0};
-  loadBoard(generate(N, mulberry32(m.seed), m.lvl));
+  loadBoard(generate(N, mulberry32(m.seed), m.lvl, 0.7));       // co-op: mostly big full squares, sometimes a shape
   gameBase = `rooms/${room}/games/${gen}`;
   if (role === 'h'){
     gameUnsubs.push(f.onChildAdded(f.ref(f.db, gameBase+'/taps'), s => {
@@ -1657,7 +1657,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.52.8'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.53.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
