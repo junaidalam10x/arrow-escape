@@ -155,12 +155,11 @@
   .lv.done{color:#fff}
   .lv.sel span{background:radial-gradient(circle at 35% 30%,#a58bff,#7554ee);color:#fff;box-shadow:0 0 22px rgba(139,108,255,.65)}
   .lv.sel{color:#fff}
-  #lactions{position:fixed;left:0;right:0;bottom:calc(100px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;z-index:8;pointer-events:none;padding:12px 0;background:#1d1f2e}
-  html[data-theme=light] #lactions{background:#f1f2fb}
+  #lactions{position:fixed;left:0;right:0;bottom:calc(100px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;z-index:8;pointer-events:none;padding:12px 0}
   #lgrid{padding-bottom:150px}
-  #lgo{pointer-events:auto;background:none;border:0;box-shadow:none;color:#a5acff;font-size:22px;font-weight:800;letter-spacing:.02em;padding:6px 26px;border-radius:14px}
-  #lgo:active{background:none;color:#fff}
-  html[data-theme=light] #lgo{color:#5b66e8}
+  #lgo{pointer-events:auto;background:#1d1f2e;border:0;box-shadow:0 0 14px 12px #1d1f2e;color:#a5acff;font-size:22px;font-weight:800;letter-spacing:.02em;padding:6px 26px;border-radius:14px}
+  #lgo:active{background:#1d1f2e;color:#fff}
+  html[data-theme=light] #lgo,html[data-theme=light] #lgo:active{color:#5b66e8;background:#f1f2fb;box-shadow:0 0 14px 12px #f1f2fb}
   #ltabs{position:relative;display:flex;justify-content:center;gap:34px;margin:4px 0 16px}
   #ltabs button{background:none;border:0;box-shadow:none;color:#6d74b8;font-size:20px;font-weight:700;padding:6px 4px 12px;transition:color .25s}
   #ltabs button.on{color:#e4e6ff}
@@ -1657,7 +1656,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.52.3'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.52.4'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
