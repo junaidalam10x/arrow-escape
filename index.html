@@ -93,7 +93,7 @@
   #cancel{display:flex;align-items:center;justify-content:center;gap:10px;background:none;border:0;box-shadow:none;color:#7378b0;font-size:13.5px;margin-top:14px;padding:8px}
   #lobby #lmsg{min-height:0;margin:8px 0 0;font-size:13px}
   #lobby #lmsg:empty{display:none}
-  #lobby{background:radial-gradient(circle at 20% 15%,rgba(111,92,240,.22),transparent 45%),radial-gradient(circle at 85% 90%,rgba(77,208,255,.12),transparent 45%),rgba(8,9,20,.9)}
+  #lobby{background:radial-gradient(circle at 20% 15%,rgba(111,92,240,.22),transparent 45%),radial-gradient(circle at 85% 90%,rgba(77,208,255,.12),transparent 45%),#0d0e1d}   /* solid: nothing of the game behind it shows through */
   #lobby .card{animation:lpop .28s cubic-bezier(.2,.9,.3,1.2);backdrop-filter:blur(10px)}
   @keyframes lpop{from{opacity:0;transform:translateY(14px) scale(.96)}to{opacity:1;transform:none}}
   #lbadge{width:42px;height:42px;margin:0 auto 8px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#7a68ff,#4f46d8);box-shadow:0 8px 22px rgba(100,90,240,.5),inset 0 1px 0 rgba(255,255,255,.3)}
@@ -120,7 +120,7 @@
   #join{opacity:.55;transition:opacity .2s,box-shadow .2s,background .2s,color .2s}
   #join.ready{opacity:1;color:#fff;background:linear-gradient(180deg,#6f5cf0,#5a4fd6);border-color:transparent;box-shadow:0 8px 24px rgba(100,90,240,.4)}
   html[data-theme=light] #lsub{color:#7378b0}
-  html[data-theme=light] #lobby{background:radial-gradient(circle at 20% 15%,rgba(111,92,240,.14),transparent 45%),rgba(241,242,251,.92)}
+  html[data-theme=light] #lobby{background:radial-gradient(circle at 20% 15%,rgba(111,92,240,.14),transparent 45%),#f1f2fb}
   html[data-theme=light] #cbox b{background:#eceefd;color:#2a2d47;border-color:rgba(91,102,232,.25)}
   html[data-theme=light] #cbox b.fill{background:#e2e5fc;border-color:rgba(91,102,232,.5)}
   html[data-theme=light] #lstat{color:#2f8a55}
@@ -1427,6 +1427,9 @@ async function joinRoom(code){
   const f = await loadFirebase();
   const s = await f.get(f.ref(f.db, `rooms/${code}/meta`));
   if (!s.exists()) throw new Error('Room not found. Check the code.');
+  // a room holds exactly two players: claim the guest seat atomically, so two people joining at once can't both get in
+  const seat = await f.runTransaction(f.ref(f.db, `rooms/${code}/players/g`), cur => cur ? undefined : true);
+  if (!seat.committed) throw new Error('Room is full. Try with another partner or create a room.');
   role = 'g'; room = code;
   enterRoom(f);
 }
@@ -1780,7 +1783,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.56.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.56.2'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
