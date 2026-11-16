@@ -178,6 +178,8 @@
   #hinfo{position:absolute;left:calc(100% + 14px);top:50%;transform:translateY(-50%);width:30px;height:30px;padding:0;background:none;border:0;box-shadow:none;color:#a5acff;display:flex;align-items:center;justify-content:center;border-radius:50%}
   #hinfo svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
   #hinfo:active{background:rgba(165,172,255,.18);transform:translateY(-50%)}
+  #hinfo{opacity:.45}
+  #hinfo:active{opacity:.8}
   html[data-theme=light] #hinfo{color:#5b66e8}
   .big:active{transform:translateY(3px);filter:brightness(1.12);box-shadow:0 1px 0 #191a3a,0 3px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
   .big small{font-weight:400;opacity:.7;font-size:12px}
@@ -1783,7 +1785,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.56.2'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.56.3'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
