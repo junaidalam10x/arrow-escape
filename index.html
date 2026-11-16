@@ -138,6 +138,8 @@
   #esub:empty{display:none}
   #esub{margin:0;opacity:.85;font-size:15px;line-height:1.35}
   .primary{background:#8f98ff;color:#1e1f2e;font-weight:700}
+  .ghost,.ghost:active{background:none;box-shadow:none;color:#a5acff;font-weight:500}
+  html[data-theme=light] .ghost{color:#5b66e8}
   .primary:active{background:#a7aeff}
   @keyframes pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
   .homebox{width:min(250px,68vw);display:flex;flex-direction:column;gap:16px;text-align:center;margin:auto;padding:24px 0}
@@ -1324,7 +1326,10 @@ $('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + 
     $('cgrid').appendChild(d);
   });
 });
-$('hinfo').onclick = () => openModal('<h3>Online co-op</h3><p>In this feature you will play with your friend on the same board. You will clear the same board together.</p>');
+$('hinfo').onclick = () => openModal('<h3>Online co-op</h3><p>In this feature you will play with your friend on the same board. You will clear the same board together.</p><button class="primary" id="hplay">Play</button>', () => {
+  $('mclose').classList.add('ghost');                                   // Close stays light, Play is the highlighted one
+  $('hplay').onclick = () => { $('modal').hidden = true; document.querySelector('#home .big[data-m="online"]').click(); };
+});
 $('privRow').onclick = () => openModal('<h3>Privacy Policy</h3><p>Arrow Escape stores your username, avatar, settings and level progress only on your device. Online co-op shares anonymous game moves with your friend through a temporary room code. We do not collect personal information, show ads or track you.</p>');
 $('termRow').onclick = () => openModal('<h3>Terms of Use</h3><p>Arrow Escape is a free game provided as is, without warranties. Please play fair in online rooms. Your progress is saved on this device and may be lost if you clear the app data.</p>');
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => { haptic(10); showScreen(t.dataset.t); });
@@ -1775,7 +1780,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.56.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.56.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
