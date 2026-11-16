@@ -134,26 +134,26 @@
   .tab.on{color:#e4e6ff;background:none}
   .tab.on svg{color:#a9b0ff}
   .tab:active{background:none;color:#c5cbff}
-  #lgrid,#chgrid{max-width:420px;margin:0 auto;padding:0 16px}
-  .lrow{position:relative;display:grid;grid-template-columns:repeat(5,1fr);height:64px;align-items:center}
+  #lgrid,#chgrid{max-width:330px;margin:0 auto;padding:0 10px}
+  .lrow{position:relative;display:grid;grid-template-columns:repeat(5,1fr);height:52px;align-items:center}
   .lband{position:absolute;left:0;top:11px;height:48px;border-radius:24px;background:#2d304b}
   #lgrid,#chgrid{position:relative}
   .lv.locked span{position:relative;color:#7b80b3;background:rgba(143,152,255,.12)}
   .lv.locked em{font-style:normal;opacity:.35}
-  .lv.locked svg{position:absolute;left:50%;top:50%;margin:-11px 0 0 -11px;width:22px;height:22px;color:#b4baff;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .lv.locked svg{position:absolute;left:50%;top:50%;margin:-9px 0 0 -9px;width:18px;height:18px;color:#b4baff;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
   #ltoast{position:fixed;left:50%;bottom:calc(235px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#2a2d47;color:#c5cbff;border:1px solid rgba(165,175,255,.3);padding:13px 20px;border-radius:26px;font-size:14px;white-space:nowrap;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.4);pointer-events:none}
   html[data-theme=light] #ltoast{background:#fff;color:#5b66e8}
   #ltoast[hidden]{display:none}
   .lnext{margin:18px auto 14px;width:fit-content;max-width:100%;background:#2a2d47;color:#a9b0ff;padding:15px 22px;border-radius:30px;font-size:14px;text-align:center;white-space:nowrap}
   html[data-theme=light] .lnext{background:#fff;color:#5b66e8}
   .ltrail{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
-  .ltrail path{fill:none;stroke:#2d304b;stroke-width:40;stroke-linecap:round;stroke-linejoin:round}
+  .ltrail path{fill:none;stroke:#2d304b;stroke-width:32;stroke-linecap:round;stroke-linejoin:round}
   html[data-theme=light] .ltrail path{stroke:#dadef8}
-  .lv{position:relative;z-index:1;width:100%;height:64px;padding:0;background:none;border-radius:0;font-size:18px;font-weight:500;color:#a39fd6;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
+  .lv{position:relative;z-index:1;width:100%;height:52px;padding:0;background:none;border-radius:0;font-size:15px;font-weight:500;color:#a39fd6;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
   .lv:active{background:none}
-  .lv span{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%}
+  .lv span{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%}
   .lv.done{color:#fff}
-  .lv.sel span{background:radial-gradient(circle at 35% 30%,#a58bff,#7554ee);color:#fff;box-shadow:0 0 22px rgba(139,108,255,.65)}
+  .lv.sel span{background:radial-gradient(circle at 35% 30%,#a58bff,#7554ee);color:#fff;box-shadow:0 0 16px rgba(139,108,255,.6)}
   .lv.sel{color:#fff}
   #lactions{position:fixed;left:0;right:0;bottom:calc(118px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center;z-index:8;pointer-events:none;padding:12px 0}
   #lgrid{padding-bottom:180px}
@@ -1115,7 +1115,7 @@ function startLevel(n, challenge = false){
 }
 
 function drawTrail(g, rows){
-  const PAD = 16, PITCH = 64, R = PITCH / 2;                   // row pitch = turn diameter, so the inside of each turn is a clean half-circle
+  const PAD = 10, PITCH = 52, R = PITCH / 2;                   // row pitch = turn diameter, so the inside of each turn is a clean half-circle
   const W = g.clientWidth, cw = (W - PAD * 2) / 5, H = rows * PITCH;
   const pt = i => { const r = Math.floor((i - 1) / 5), k = (i - 1) % 5, c = r % 2 ? 4 - k : k; return [PAD + (c + .5) * cw, r * PITCH + R, r]; };
   if (lvCur < 2 || !W) return;
@@ -1657,7 +1657,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.53.0'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.53.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
