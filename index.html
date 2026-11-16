@@ -160,7 +160,7 @@
   #lgo{pointer-events:auto;background:none;border:0;box-shadow:none;color:#a5acff;font-size:22px;font-weight:800;letter-spacing:.02em;padding:6px 26px;border-radius:14px}
   #lgo:active{background:none;color:#fff}
   html[data-theme=light] #lgo,html[data-theme=light] #lgo:active{color:#5b66e8}
-  #ltabs{position:relative;display:flex;justify-content:center;gap:34px;margin:4px 0 16px}
+  #ltabs{position:relative;display:flex;justify-content:center;gap:34px;margin:4px 0 40px}
   #ltabs button{background:none;border:0;box-shadow:none;color:#6d74b8;font-size:20px;font-weight:700;padding:6px 4px 12px;transition:color .25s}
   #ltabs button.on{color:#e4e6ff}
   #ltind{position:absolute;bottom:0;left:0;height:3px;width:0;border-radius:3px;background:#8f98ff;box-shadow:0 0 10px rgba(143,152,255,.7);transition:transform .28s cubic-bezier(.4,.1,.2,1),width .28s}
@@ -420,7 +420,22 @@ function tone(f, t0, d, type, v){
   o.connect(g); g.connect(actx.destination);
   o.start(actx.currentTime + t0); o.stop(actx.currentTime + t0 + d + 0.02);
 }
-function sfx(kind){
+// Countdown sounds, copied from the reference clip: a very short double "tick" (two tiny clicks ~12 ms apart, 3.4 kHz then 5.4 kHz)
+// every second, and one steady 0.5 s beep made of 900 Hz + 960 Hz when the time is over.
+function clickAt(c, t, freq, q, vol, dur){
+  const n = Math.max(8, Math.floor(c.sampleRate * dur)), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+  const src = c.createBufferSource(), bp = c.createBiquadFilter(), g = c.createGain();
+  bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q; g.gain.value = vol;
+  src.buffer = buf; src.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t);
+}
+function clockTick(c, t){ clickAt(c, t, 3450, 1.1, 0.5, .010); clickAt(c, t + .012, 5400, 1.4, 0.85, .012); }
+function endBeep(c, t){
+  [900, 960].forEach(f => { const o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06, t + .006); g.gain.setValueAtTime(0.06, t + .47); g.gain.linearRampToValueAtTime(0.0001, t + .5);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + .52); });
+}
+function sfx(kind, f){
   if (!prefs.snd) return;
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
@@ -430,6 +445,12 @@ function sfx(kind){
     else if (kind === 'win') [523,659,784,1047].forEach((f,i) => tone(f, i*.11, .22, 'triangle'));
     else if (kind === 'warn'){ tone(900, 0, .11, 'square', .06); tone(900, .16, .11, 'square', .04); }
     else if (kind === 'warn2'){ tone(1250, 0, .1, 'square', .07); tone(1250, .13, .1, 'square', .06); tone(1250, .26, .12, 'square', .05); }
+    else if (kind === 'tick'){ tone(1900, 0, .035, 'square', .09); tone(950, 0, .06, 'triangle', .1); }        // ticking clock: sharp "tick"
+    else if (kind === 'tock'){ tone(1300, 0, .035, 'square', .08); tone(640, 0, .08, 'triangle', .12); }        // and a lower "tock"
+    else if (kind === 'clock') clockTick(actx, actx.currentTime);
+    else if (kind === 'end') endBeep(actx, actx.currentTime);
+    else if (kind === 'beep'){ tone(f || 1000, 0, .1, 'sine', .17); tone((f || 1000) * 2, 0, .06, 'sine', .05); }   // countdown beep (pitch rises each second)
+    else if (kind === 'buzz'){ tone(190, 0, .7, 'sawtooth', .13); tone(195, 0, .7, 'square', .05); }              // time-up buzzer
     else if (kind === 'lose'){ tone(330, 0, .2, 'triangle'); tone(247, .18, .3, 'triangle'); }
   } catch(e){}
 }
@@ -487,18 +508,26 @@ const APPROX = {Easy:33, Medium:54, Hard:135, Nightmare:337};        // typical 
 function chalSecs(n){ const d = levelDiff(n), arrowsNow = total || APPROX[d]; return Math.max(12, Math.round(arrowsNow * CHAL_SEC[d] * Math.max(0.65, 1 - 0.01 * (n - 1)) / 5) * 5); }   // based on this board's real arrow count
 const fmtTime = t => Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
 const levelLabel = () => 'Level ' + levelMode + ' \u00B7 ' + levelDiff(levelMode);
-function stopChallenge(){ clearInterval(chalTimer); chalTimer = 0; $('ctimer').hidden = true; $('ctimer').classList.remove('low'); }
+let warnTimer = 0;
+function stopChallenge(){ clearInterval(chalTimer); chalTimer = 0; clearInterval(warnTimer); warnTimer = 0; $('ctimer').hidden = true; $('ctimer').classList.remove('low'); }
 function showLevelLabel(){ $('ctimer').textContent = levelLabel(); $('ctimer').hidden = false; }
 function startChallenge(){
   stopChallenge();
   const secs = chalSecs(levelMode);
   chalEnd = performance.now() + secs * 1000;
-  let lastWarn = -1;
+  // last 10 seconds: a ticking clock (tick, tock, tick...) that speeds up as the time runs out
+  // last 10 seconds: one clock tick every second (like the reference clip), then a steady beep at zero
+  let lastLeft = 99;
+  warnTimer = setInterval(() => {
+    const ms = chalEnd - performance.now();
+    if (over || ms <= 0 || ms > 10000) return;
+    const left = Math.ceil(ms / 1000);
+    if (left !== lastLeft){ lastLeft = left; sfx('clock'); haptic(left <= 3 ? 30 : 12); }
+  }, 30);
   const tick = () => {
     const left = Math.max(0, Math.ceil((chalEnd - performance.now()) / 1000));
-    if (left <= 10 && left > 0 && left !== lastWarn && !over){ lastWarn = left; sfx(left <= 3 ? 'warn2' : 'warn'); haptic(left <= 3 ? [40,40,40] : 25); }   // last 10 seconds: a warning beep every second
     $('ctimer').textContent = levelLabel() + ' \u00B7 ' + fmtTime(left); $('ctimer').classList.toggle('low', left <= 10);
-    if (left <= 0 && !over){ finish(true, 'Time is up!'); }
+    if (left <= 0 && !over){ sfx('end'); haptic([150,50,150]); finish(true, 'Time is up!'); }
   };
   $('ctimer').hidden = false; tick(); chalTimer = setInterval(tick, 200);
 }
@@ -1657,7 +1686,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.53.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.54.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
