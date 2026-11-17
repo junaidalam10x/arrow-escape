@@ -1329,7 +1329,7 @@ $('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + 
     $('cgrid').appendChild(d);
   });
 });
-$('hinfo').onclick = () => openModal('<h3>Escape Together!</h3><p>Bring a friend along! Team up on one board and conquer the challenge together.</p><button class="primary" id="hplay">Play</button>', () => {
+$('hinfo').onclick = () => openModal('<h3>Escape Together!</h3><p>Bring a friend along! Team up on one board and conquer the challenge together.</p><button class="primary" id="hplay">Call Friend</button>', () => {
   $('mclose').classList.add('ghost');                                   // Close stays light, Play is the highlighted one
   $('hplay').onclick = () => { $('modal').hidden = true; document.querySelector('#home .big[data-m="online"]').click(); };
 });
