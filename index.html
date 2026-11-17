@@ -605,7 +605,7 @@ function startChallenge(){
   const tick = () => {
     const left = Math.max(0, Math.ceil((chalEnd - performance.now()) / 1000));
     $('ctimer').textContent = levelLabel() + ' \u00B7 ' + fmtTime(left); $('ctimer').classList.toggle('low', left <= 10);
-    if (left <= 0 && !over){ sfx('end'); haptic([150,50,150]); finish(true, 'Time is up!'); }
+    if (left <= 0 && !over){ sfx('end'); haptic([150,50,150]); finish(true, 'Out of time!'); }
   };
   $('ctimer').hidden = false; tick(); chalTimer = setInterval(tick, 200);
 }
@@ -1077,16 +1077,16 @@ function finish(lost, msg){
   const firstClear = levelMode != null && !lost && levelMode >= lvCur;     // collectibles drop only the first time a level is cleared
   if (firstClear){ rollDrop(chal ? 0.7 : 0.35); lvCur = levelMode + 1; store.set(chal ? 'arrow-chal' : 'arrow-level', lvCur); }
   if (players.length === 1){
-    setStatus(lost ? 'Out of hearts. Tap New to try again.' : 'Cleared! Tap New for another board.');
+    setStatus(lost ? (msg ? msg + ' Tap New to try again.' : 'Out of hearts. Tap New to try again.') : 'Cleared! Tap New for another board.');
     const hl = players[0].hearts;
-    if (lost) showEnd(false, msg || 'You Lost', '', 700);
+    if (lost) showEnd(false, msg || 'Out of hearts!', '', 700);
     else showEnd(true, 'Congratulations! You Won', '', 800);
   } else {
     const best = Math.max(...players.map(p=>p.score));
     const w = players.filter(p=>p.score===best);
     setStatus(w.length>1 ? "It's a draw! "+best+' each.' : w[0].name+' wins with '+best+' arrows!');
     const scores = players.map(p => `${p.name} ${p.score}`).join(' \u00B7 ');
-    if (lost) showEnd(false, 'You Lost', '', 700);
+    if (lost) showEnd(false, 'Out of hearts!', '', 700);
     else showEnd(true, w.length>1 ? "Congratulations! It's a draw" : 'Congratulations! '+w[0].name+' Won', '', 800);
   }
 }
@@ -1329,7 +1329,7 @@ $('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + 
     $('cgrid').appendChild(d);
   });
 });
-$('hinfo').onclick = () => openModal('<h3>Online co-op</h3><p>In this feature you will play with your friend on the same board. You will clear the same board together.</p><button class="primary" id="hplay">Play</button>', () => {
+$('hinfo').onclick = () => openModal('<h3>Online co-op</h3><p>Bring a friend along! Team up on one board and conquer the challenge together.</p><button class="primary" id="hplay">Play</button>', () => {
   $('mclose').classList.add('ghost');                                   // Close stays light, Play is the highlighted one
   $('hplay').onclick = () => { $('modal').hidden = true; document.querySelector('#home .big[data-m="online"]').click(); };
 });
@@ -1513,7 +1513,7 @@ function applyEvent(ev){
     team.hearts--;
     if (team.hearts <= 0){
       over = true; updateUI();
-      showEnd(false, 'You Lost', '', 700);
+      showEnd(false, 'Out of hearts!', '', 700);
       return setStatus(`Out of hearts. Cleared ${removed} of ${total}. ${role==='h' ? 'Tap New to retry.' : 'Host can start a new game.'}`);
     }
     setStatus('Blocked! A shared heart broke. The red arrow leaves once its way is clear.');
@@ -1786,7 +1786,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.56.5'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.56.6'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){

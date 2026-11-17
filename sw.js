@@ -1,4 +1,4 @@
-const CACHE = 'arrow-escape-v104';
+const CACHE = 'arrow-escape-v105';
 const FILES = ['./', 'index.html', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'firebase-config.js'];
 
 self.addEventListener('install', e => {
