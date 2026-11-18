@@ -1727,16 +1727,19 @@ $('hint').onclick = () => {
 addEventListener('resize', () => { if (arrows) layout(false); });
 
 /* ---------- drawing ---------- */
+const LEAVE = '#8f98ff';   // main accent colour: an arrow turns this colour while it leaves
 const RED = '#ff4b5c'; let GOLD = '#ffd166', BLUE = '#c5c9ff', GREEN = '#5dffb0', DOT = 'rgba(165,175,245,.4)';
 const cellPts = a => a.path.map(([x,y]) => [x+0.5, y+0.5]);
 
-function strokePoly(pts, dx, dy, color){
-  const w = Math.max(1.6, cs*0.085);
+function strokePoly(pts, dx, dy, color, dotted){
+  const w = dotted ? Math.max(2.4, cs*0.12) : Math.max(1.6, cs*0.085);
   ctx.strokeStyle = ctx.fillStyle = color;
   ctx.lineWidth = w; ctx.lineJoin = ctx.lineCap = 'round';
+  if (dotted) ctx.setLineDash([0, cs*0.27]);              // leaving arrow: the body turns into a trail of dots
   ctx.beginPath();
   pts.forEach(([x,y],i) => i ? ctx.lineTo(x*cs,y*cs) : ctx.moveTo(x*cs,y*cs));
   ctx.stroke();
+  if (dotted) ctx.setLineDash([]);
   const px = pts[pts.length-1][0]*cs, py = pts[pts.length-1][1]*cs, s = cs*0.30;
   ctx.beginPath();
   ctx.moveTo(px+dx*s, py+dy*s);
@@ -1765,10 +1768,28 @@ function snakePts(a, s){
   return out;
 }
 
-function drawBoardBg(){
+function drawBoardBg(now){
   const busy = new Uint8Array(N*N);                          // dots show only in empty cells inside the shape
   if (shapeMask) for (let i = 0; i < N*N; i++) if (!shapeMask[i]) busy[i] = 1;
   for (const a of arrows) if (a.alive) for (const [x,y] of a.path) busy[y*N+x] = 1;
+  // leaving arrows: each cell's dot lights up the moment the tail passes it, then settles back
+  const pops = [];
+  for (const an of anims){
+    const n = an.a.path.length, col = '143,152,255';
+    an.a.path.forEach(([x,y], i) => {
+      const k = y*N+x; if (busy[k]) return;
+      const ti = an.dur * Math.pow(Math.min(1, i/Math.max(1, an.total)), 1/1.5);   // when the tail clears this cell
+      const u = (now - an.t0 - ti) / 420;
+      busy[k] = 1;
+      if (u >= 0) pops.push([x, y, u, col]);
+    });
+    const hd = an.a.path[n-1];                                   // the straight road ahead of the head, out to the edge: its dots light up as the head runs over them
+    for (let j = 1, x = hd[0]+an.a.dx, y = hd[1]+an.a.dy; x >= 0 && y >= 0 && x < N && y < N; j++, x += an.a.dx, y += an.a.dy){
+      const k = y*N+x; if (busy[k]) continue;
+      const u = (now - an.t0 - an.dur * Math.pow(Math.min(1, (n-1+j)/Math.max(1, an.total)), 1/1.5)) / 420;
+      if (u >= 0) pops.push([x, y, u, col]);
+    }
+  }
   ctx.fillStyle = DOT;
   const dr = Math.max(cs*0.05, 1/view.s);
   ctx.beginPath();
@@ -1778,6 +1799,14 @@ function drawBoardBg(){
     ctx.moveTo(x+dr, y); ctx.arc(x, y, dr, 0, 6.2832);
   }
   ctx.fill();
+  for (const [x, y, u, col] of pops){
+    const e = u >= 1 ? 0 : Math.sin(Math.PI*Math.min(1,u))*(1-u*0.4);      // quick swell then fade back to a normal dot
+    const cx = (x+0.5)*cs, cy = (y+0.5)*cs;
+    ctx.fillStyle = 'rgba('+col+','+(0.28+0.4*e)+')';
+    ctx.shadowColor = 'rgba('+col+',.45)'; ctx.shadowBlur = 5*e*DPR;
+    ctx.beginPath(); ctx.arc(cx, cy, dr*(1+0.9*e), 0, 6.2832); ctx.fill();
+  }
+  ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
 }
 
 function frame(now){
@@ -1785,7 +1814,8 @@ function frame(now){
     ctx.setTransform(1,0,0,1,0,0);
     ctx.clearRect(0,0,cv.width,cv.height);
     ctx.setTransform(DPR*view.s,0,0,DPR*view.s,DPR*view.ox,DPR*view.oy);
-    drawBoardBg();
+    anims = anims.filter(an => now-an.t0 < an.dur);
+    drawBoardBg(now);
     flashes = flashes.filter(f => now-f.t0 < bumpMs(f.d));
     anims = anims.filter(an => now-an.t0 < an.dur);
     for (const a of arrows){
@@ -1799,7 +1829,7 @@ function frame(now){
     }
     for (const an of anims){
       const t = Math.min(1, Math.max(0, (now-an.t0)/an.dur));
-      strokePoly(snakePts(an.a, an.total*Math.pow(t,1.5)), an.a.dx, an.a.dy, an.red ? RED : (an.a.special ? GOLD : BLUE));
+      strokePoly(snakePts(an.a, an.total*Math.pow(t,1.5)), an.a.dx, an.a.dy, LEAVE);
     }
   }
   requestAnimationFrame(frame);
@@ -1809,7 +1839,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.56.12'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.56.16'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
