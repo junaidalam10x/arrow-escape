@@ -302,6 +302,11 @@
   #pcancel,#pcancel:active,html[data-theme=light] #pcancel,html[data-theme=light] #pcancel:active{background:none;box-shadow:none;color:#8a8fc4}
   #pcancel:active{color:#c5cbff}
   .btns{display:flex;gap:12px;margin-top:6px}
+  #modal .card,#picker .card,#endcard .card,#lobby .card{position:relative}
+  button.xbtn,button.xbtn:active,html[data-theme=light] button.xbtn{position:absolute;top:10px;right:10px;width:36px;height:36px;min-width:0;padding:0;margin:0;flex:none;background:none;box-shadow:none;border:0;border-radius:50%;color:#6f76c9;font-size:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  button.xbtn::before{content:'';width:18px;height:18px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round'%3E%3Cpath d='M5 5l14 14M19 5L5 19'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round'%3E%3Cpath d='M5 5l14 14M19 5L5 19'/%3E%3C/svg%3E") center/contain no-repeat}
+  button.xbtn:active{color:#c5cbff}
+  #cancel.xbtn{margin:0;padding:0;font-size:0;gap:0;top:12px;right:12px;color:#6f76c9}
   .card h3{font-size:20px}
   #endcard .card{gap:14px}
   .ebig{margin-bottom:2px}
@@ -391,7 +396,7 @@
     <div id="cbox"><b></b><b></b><b></b><b></b><b></b><input id="code" maxlength="5" aria-label="Room code" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
     <button id="join"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg> Join Room</button>
     <p id="lmsg"></p>
-    <button id="cancel"><svg viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></svg> Back to menu</button>
+    <button id="cancel" class="xbtn" aria-label="Close"></button>
   </div>
 </div>
 
@@ -399,7 +404,7 @@
   <div class="card">
     <h3 id="ptitle"></h3>
     <div id="popts"></div>
-    <button id="pcancel">Close</button>
+    <button id="pcancel" class="xbtn" aria-label="Close"></button>
   </div>
 </div>
 
@@ -1153,8 +1158,9 @@ function showEnd(win, title, sub, delay){
     $('esub').textContent = (win && lastDrop) ? 'New collectible: ' + lastDrop[1] + ' ' + lastDrop[2] + ' (' + lastDrop[3] + ')' : (sub || (guest ? 'Waiting for the host to start a new game.' : ''));
     $('enew').hidden = !!guest || lvWin;
     $('ehome').hidden = lvWin;
-    $('enew').textContent = win ? (levelMode != null ? 'Next level' : 'New game') : 'Try again';
-    $('ehome').textContent = levelMode != null ? 'Close' : 'Go to home';
+    $('enew').textContent = win ? (levelMode != null ? 'Next level' : 'New game') : 'Play again';
+    $('ehome').textContent = levelMode != null ? '' : 'Go to home';
+    $('ehome').classList.toggle('xbtn', levelMode != null); $('ehome').setAttribute('aria-label', levelMode != null ? 'Close' : 'Go to home');
     $('endcard').hidden = false;
     if (lvWin) nextTimer = setTimeout(() => { nextTimer = 0; hideEnd(); levelMode++; lvSel = levelMode; lvBoard = newSeed(); newGame(); }, lastDrop ? 2800 : 2000);
     if (win){ confetti(); haptic([40,60,40]); }
@@ -1288,12 +1294,12 @@ function renderProfile(){
   $('sndTg').classList.toggle('on', prefs.snd);
 }
 function openModal(html, wire){
-  $('mcard').innerHTML = html + '<button id="mclose">Close</button>';
+  $('mcard').innerHTML = html + '<button id="mclose" class="xbtn" aria-label="Close"></button>';
   $('modal').hidden = false;
   $('mclose').onclick = () => { $('modal').hidden = true; };
   if (wire) wire();
   const pr = $('mcard').querySelector('.primary');
-  if (pr){ const d = document.createElement('div'); d.className = 'btns'; $('mcard').insertBefore(d, pr); d.appendChild(pr); d.appendChild($('mclose')); }
+  if (pr){ const d = document.createElement('div'); d.className = 'btns'; $('mcard').insertBefore(d, pr); d.appendChild(pr); }
 }
 $('modal').onclick = e => { if (e.target === $('modal')) $('modal').hidden = true; };
 $('avbtn').onclick = () => {
@@ -1329,8 +1335,7 @@ $('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + 
     $('cgrid').appendChild(d);
   });
 });
-$('hinfo').onclick = () => openModal('<h3>Escape Together!</h3><p>Bring a friend along! Team up on one board and conquer the challenge together.</p><button class="primary" id="hplay">Call Friend</button>', () => {
-  $('mclose').classList.add('ghost');                                   // Close stays light, Play is the highlighted one
+$('hinfo').onclick = () => openModal('<h3>Online co-op</h3><p>Bring a friend along! Team up on one board and conquer the challenge together.</p><button class="primary" id="hplay">Play</button>', () => {
   $('hplay').onclick = () => { $('modal').hidden = true; document.querySelector('#home .big[data-m="online"]').click(); };
 });
 $('privRow').onclick = () => openModal('<h3>Privacy Policy</h3><p>Arrow Escape stores your username, avatar, settings and level progress only on your device. Online co-op shares anonymous game moves with your friend through a temporary room code. We do not collect personal information, show ads or track you.</p>');
@@ -1786,7 +1791,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.56.6'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.56.9'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
