@@ -305,6 +305,7 @@
   #modal .card,#picker .card,#endcard .card,#lobby .card{position:relative}
   button.xbtn,button.xbtn:active,html[data-theme=light] button.xbtn{position:absolute;top:10px;right:10px;width:36px;height:36px;min-width:0;padding:0;margin:0;flex:none;background:none;box-shadow:none;border:0;border-radius:50%;color:#6f76c9;font-size:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
   button.xbtn::before{content:'';width:18px;height:18px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round'%3E%3Cpath d='M5 5l14 14M19 5L5 19'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round'%3E%3Cpath d='M5 5l14 14M19 5L5 19'/%3E%3C/svg%3E") center/contain no-repeat}
+  button.xbtn[hidden]{display:none}
   button.xbtn:active{color:#c5cbff}
   #cancel.xbtn{margin:0;padding:0;font-size:0;gap:0;top:12px;right:12px;color:#6f76c9}
   .card h3{font-size:20px}
@@ -412,6 +413,7 @@
 
 <div id="endcard" hidden>
   <div class="card">
+    <button id="eclose" class="xbtn" aria-label="Close" hidden></button>
     <div class="ebig" id="etrophy"></div>
     <h3 id="etitle"></h3>
     <p id="esub"></p>
@@ -1099,6 +1101,7 @@ function finish(lost, msg){
 /* ---------- result card, confetti and home screen ---------- */
 const cf = $('confetti'), cfx = cf.getContext('2d');
 let parts = [], cfRAF = 0, cfLast = 0, endTimer = 0, nextTimer = 0;
+const CLOCK = '<svg class="tro" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4.2l2.8 1.8M9.5 3h5M12 3v2.5M18.6 6.4l1.4-1.4"/></svg>';
 const TROPHY = '<svg class="tro" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1.5A3 3 0 0 0 7 10.5M17 6h3v1.5a3 3 0 0 1-3 3M12 14v4M8.5 20h7"/></svg>';
 const PRAISE = ['Marvelous!','Gorgeous!','Excellent!','Great!','Brilliant!','Fantastic!','Superb!','Awesome!','Perfect!','Amazing!'];
 
@@ -1153,11 +1156,12 @@ function showEnd(win, title, sub, delay){
     const guest = room && role === 'g';
     const lvWin = win && levelMode != null && !room;
     $('endcard').classList.toggle('bare', lvWin);
-    if (win) $('etrophy').innerHTML = TROPHY; else $('etrophy').textContent = '\uD83D\uDC94';
+    if (win) $('etrophy').innerHTML = TROPHY; else if (title === 'Out of time!') $('etrophy').innerHTML = CLOCK; else $('etrophy').textContent = '\uD83D\uDC94';
     $('etitle').textContent = lvWin ? PRAISE[Math.floor(Math.random()*PRAISE.length)] : title;
     $('esub').textContent = (win && lastDrop) ? 'New collectible: ' + lastDrop[1] + ' ' + lastDrop[2] + ' (' + lastDrop[3] + ')' : (sub || (guest ? 'Waiting for the host to start a new game.' : ''));
     $('enew').hidden = !!guest || lvWin;
-    $('ehome').hidden = lvWin;
+    $('ehome').hidden = lvWin || levelMode == null;
+    $('eclose').hidden = lvWin || levelMode != null;
     $('enew').textContent = win ? (levelMode != null ? 'Next level' : 'New game') : 'Play again';
     $('ehome').textContent = levelMode != null ? '' : 'Go to home';
     $('ehome').classList.toggle('xbtn', levelMode != null); $('ehome').setAttribute('aria-label', levelMode != null ? 'Close' : 'Go to home');
@@ -1389,6 +1393,7 @@ $('enew').onclick = () => {
   if (levelMode != null){ if (lastWin) { levelMode++; lvSel = levelMode; } lvBoard = newSeed(); newGame(); return; }
   newGame();
 };
+$('eclose').onclick = () => hideEnd();
 $('ehome').onclick = () => goHome(levelMode != null ? (chal ? 'challenge' : 'levels') : 'home');
 document.querySelectorAll('#home .big').forEach(b => {
   b.onclick = () => startFromHome(b.dataset.m);
@@ -1791,7 +1796,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.56.9'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.56.11'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
