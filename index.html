@@ -1924,6 +1924,18 @@ function frame(now){
       const inS = (x, y) => x >= 0 && y >= 0 && x < N && y < N && (!shapeMask || shapeMask[y*N+x]);
       const rnd = (i, j, k) => { const v = Math.sin(i*127.1 + j*311.7 + k*74.7) * 43758.5453; return v - Math.floor(v); };
       const settle = Math.min(1, Math.max(0, (t-850)/450));                      // rainbow -> app purple
+      if (!winGlow.extra){                                                     // extra dots between neighbouring outline dots, so the outline reads as a smooth, complete shape
+        const isEdge = (x, y) => inS(x, y) && (!inS(x+1,y) || !inS(x-1,y) || !inS(x,y+1) || !inS(x,y-1));
+        winGlow.extra = [];
+        for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){
+          if (!isEdge(i, j)) continue;
+          for (const [ox, oy] of [[1,0],[0,1],[1,1],[1,-1]]){
+            if (!isEdge(i+ox, j+oy)) continue;
+            const mx = i + ox/2, my = j + oy/2;
+            winGlow.extra.push([(mx+0.5)*cs, (my+0.5)*cs, Math.hypot(mx-winGlow.cx, my-winGlow.cy) / winGlow.md]);
+          }
+        }
+      }
       for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){
         if (!inS(i, j)) continue;
         const d = Math.hypot(i-winGlow.cx, j-winGlow.cy) / winGlow.md;
@@ -1947,6 +1959,16 @@ function frame(now){
         ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 8*a*alpha*DPR;
         ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill();
       }
+      for (const [x, y, d] of winGlow.extra){                                   // the extra outline dots: same ripple + colours, a bit smaller, they stay lit
+        const u = (t - d*560) / 380;
+        if (u < 0) continue;
+        const k = Math.min(1, u), base = k*k*(3-2*k), pulse = Math.sin(Math.PI*k);
+        let a = base*0.8 + 0.45*pulse; if (u >= 1) a *= 0.9 + 0.1*Math.sin(t/230 + x/cs + y/cs);
+        const hue = (d*300 + t*0.25) % 360, hh = Math.round(hue*(1-settle) + 236*settle);
+        ctx.fillStyle = 'hsla('+hh+','+Math.round(95*(1-settle)+100*settle)+'%,'+Math.round(68*(1-settle)+80*settle)+'%,'+Math.min(1,0.45+0.55*a)+')';
+        ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 8*a*DPR;
+        ctx.beginPath(); ctx.arc(x, y, dr0*(1 + 1.0*base + 0.7*pulse), 0, 6.2832); ctx.fill();
+      }
       ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
     }
     for (const an of anims){
@@ -1961,7 +1983,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.57.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.57.2'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
