@@ -318,6 +318,25 @@
   .card h3{font-size:20px}
   #endcard .card{gap:14px}
   .ebig{margin-bottom:2px}
+  .cart{width:100%;height:100%;display:block;overflow:visible}
+  .cart .a-pulse{transform-origin:32px 32px;animation:cpulse 2.4s ease-in-out infinite}
+  .cart .a-flick{transform-origin:32px 40px;animation:cflick 1.6s ease-in-out infinite}
+  .cart .a-flick2{transform-origin:32px 58px;animation:cflick 1.1s ease-in-out infinite}
+  .cart .a-spin{transform-origin:32px 32px;animation:cspin 9s linear infinite}
+  .cart .a-tick{transform-origin:32px 36px;animation:cspin 4s linear infinite}
+  .cart .a-shine{animation:cshine 2.2s ease-in-out infinite}
+  @keyframes cpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  @keyframes cflick{0%,100%{transform:scale(1)}35%{transform:scale(.96,1.07)}70%{transform:scale(1.04,.97)}}
+  @keyframes cspin{to{transform:rotate(360deg)}}
+  @keyframes cshine{0%,100%{opacity:0}50%{opacity:.45}}
+  @media (prefers-reduced-motion:reduce){.cart *{animation:none!important}}
+  .ci b .cart{width:36px;height:36px;margin:0 auto}
+  .ci.no b .cart{filter:brightness(0) opacity(.3)}
+  .ci.no b .cart *{animation:none}
+  .av .cart{width:62px;height:62px}
+  #avopts button .cart{width:36px;height:36px;margin:0 auto}
+  #etrophy .cart{width:64px;height:64px;margin:0 auto}
+  #endcard.bare #etrophy .cart{width:104px;height:104px}
   .tro{width:56px;height:56px;fill:none;stroke:#8f98ff;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 10px rgba(143,152,255,.45))}
   #endcard.bare .tro{width:104px;height:104px}
   html[data-theme=light] .tro{stroke:#5b66e8}
@@ -555,18 +574,74 @@ function sfx(kind, f){
 
 /* ---------- collection: exclusive items that can drop when you win a level ---------- */
 const ITEMS = [
-  ['fox','\uD83E\uDD8A','Fox','Common'],['panda','\uD83D\uDC3C','Panda','Common'],['frog','\uD83D\uDC38','Frog','Common'],['cat','\uD83D\uDC31','Cat','Common'],
-  ['dog','\uD83D\uDC36','Dog','Common'],['bunny','\uD83D\uDC30','Bunny','Common'],['owl','\uD83E\uDD89','Owl','Common'],['bee','\uD83D\uDC1D','Bee','Common'],
-  ['tiger','\uD83D\uDC2F','Tiger','Rare'],['lion','\uD83E\uDD81','Lion','Rare'],['octopus','\uD83D\uDC19','Octopus','Rare'],['whale','\uD83D\uDC33','Whale','Rare'],
-  ['rocket','\uD83D\uDE80','Rocket','Rare'],['robot','\uD83E\uDD16','Robot','Rare'],['alien','\uD83D\uDC7E','Alien','Epic'],['unicorn','\uD83E\uDD84','Unicorn','Epic'],
-  ['dragon','\uD83D\uDC09','Dragon','Epic'],['diamond','\uD83D\uDC8E','Diamond','Epic'],['crown','\uD83D\uDC51','Crown','Legendary'],['trophy','\uD83C\uDFC6','Golden Trophy','Legendary']
+  ['plane','\u2726','Paper Plane','Common'],['clover','\u2726','Lucky Clover','Common'],['moon','\u2726','Crescent Moon','Common'],['cloud','\u2726','Cloud Nine','Common'],
+  ['sprout','\u2726','Sprout','Common'],['bolt','\u2726','Lightning','Common'],['star','\u2726','Wish Star','Common'],['drop','\u2726','Water Drop','Common'],
+  ['sun','\u2726','Sunburst','Rare'],['planet','\u2726','Ringed Planet','Rare'],['snow','\u2726','Snowflake','Rare'],['note','\u2726','Melody','Rare'],
+  ['rocket','\u2726','Rocket','Rare'],['compass','\u2726','Compass','Rare'],['alien','\u2726','Pixel Alien','Epic'],['rainbow','\u2726','Rainbow','Epic'],
+  ['galaxy','\u2726','Galaxy','Epic'],['diamond','\u2726','Diamond','Epic'],['crown','\u2726','Royal Crown','Legendary'],['trophy','\u2726','Golden Trophy','Legendary'],
+  // unique hand-drawn items (5th value = how to unlock; none = random drop)
+  ['key','\u2726','Maze Key','Epic'],['orb','\u2726','Spirit Orb','Epic'],['neonheart','\u2726','Neon Heart','Rare'],['bulb','\u2726','Bright Idea','Rare'],['mango','\u2726','Golden Mango','Rare'],['flame','\u2726','Fire Spirit','Legendary'],['crystal','\u2726','Prism Crystal','Mythic'],
+  ['goldarrow','\u2726','Golden Arrow','Legendary','Clear level 10'],['timemaster','\u2726','Time Master','Legendary','Clear Challenge level 5'],['duo','\u2726','Soul Duo','Epic','Win an online co-op game'],['comet','\u2726','Comet','Legendary','Win 10 games in a row'],['arrowmaster','\u2726','Arrow Master','Mythic','Clear level 40']
 ];
-const RARITY = {Common:{w:60,c:'#8a8fc4'}, Rare:{w:25,c:'#4dd0ff'}, Epic:{w:11,c:'#c77dff'}, Legendary:{w:4,c:'#ffd166'}};
-let owned = store.get('arrow-coll', []).filter(id => ITEMS.some(i => i[0] === id));
+const RARITY = {Common:{w:60,c:'#8a8fc4'}, Rare:{w:25,c:'#4dd0ff'}, Epic:{w:11,c:'#c77dff'}, Legendary:{w:4,c:'#ffd166'}, Mythic:{w:1,c:'#ff5fd2'}};
+const MIGRATE = {fox:'plane',panda:'clover',frog:'moon',cat:'cloud',dog:'sprout',bunny:'bolt',owl:'star',bee:'drop',tiger:'sun',lion:'planet',octopus:'snow',whale:'note',robot:'compass',unicorn:'rainbow',dragon:'galaxy'};   // the old emoji items turn into the new hand-drawn ones
+let owned = [...new Set(store.get('arrow-coll', []).map(id => MIGRATE[id] || id))].filter(id => ITEMS.some(i => i[0] === id));
+if (owned.length) store.set('arrow-coll', owned);
 let lastDrop = null;
+
+const ART = {
+ plane: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9fbff"/><stop offset=".55" stop-color="#7fd6ff"/><stop offset="1" stop-color="#2f9bd6"/></linearGradient></defs><g style="filter:drop-shadow(0 0 4px #4dd0ff)"><path d="M5 30L59 7L41 57L31 38Z" fill="url(#@@a)"/><path d="M59 7L31 38L28 51L38 42Z" fill="#0b3b66" opacity=".35"/><path d="M5 30L59 7L31 38Z" fill="#fff" opacity=".35"/></g>',
+ clover: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b6ffb0"/><stop offset=".55" stop-color="#52d66a"/><stop offset="1" stop-color="#1f9d4d"/></linearGradient></defs><g style="filter:drop-shadow(0 0 4px #4ade80)"><path transform="rotate(0 32 32)" d="M32 31C32 31 21 24 21 15C21 8 30 6 32 13C34 6 43 8 43 15C43 24 32 31 32 31Z" fill="url(#@@a)"/><path transform="rotate(90 32 32)" d="M32 31C32 31 21 24 21 15C21 8 30 6 32 13C34 6 43 8 43 15C43 24 32 31 32 31Z" fill="url(#@@a)"/><path transform="rotate(180 32 32)" d="M32 31C32 31 21 24 21 15C21 8 30 6 32 13C34 6 43 8 43 15C43 24 32 31 32 31Z" fill="url(#@@a)"/><path transform="rotate(270 32 32)" d="M32 31C32 31 21 24 21 15C21 8 30 6 32 13C34 6 43 8 43 15C43 24 32 31 32 31Z" fill="url(#@@a)"/><path d="M33 36Q35 50 44 58" fill="none" stroke="#2fae5a" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="32" r="3" fill="#eaffe9" opacity=".8"/></g>',
+ moon: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8d6"/><stop offset=".55" stop-color="#ffe58a"/><stop offset="1" stop-color="#f5b942"/></linearGradient></defs><g style="filter:drop-shadow(0 0 4px #ffd966)"><path d="M42 6A27 27 0 1 0 58 44A22 22 0 0 1 42 6Z" fill="url(#@@a)"/></g><g class="a-shine"><path d="M50 12v8M46 16h8M56 30v5M53.500 32.500h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g>',
+ cloud: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#dcecff"/><stop offset="1" stop-color="#9ac7ff"/></linearGradient></defs><g style="filter:drop-shadow(0 0 4px #8cc4ff)"><path d="M17 48A11 11 0 0 1 14 27A15 15 0 0 1 42 22A13 13 0 0 1 49 48Z" fill="url(#@@a)"/><ellipse cx="25" cy="28" rx="7" ry="4" fill="#fff" opacity=".7"/></g>',
+ sprout: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d2ff9a"/><stop offset=".55" stop-color="#78d94a"/><stop offset="1" stop-color="#2e9e3a"/></linearGradient></defs><g style="filter:drop-shadow(0 0 4px #86efac)"><path d="M32 58V30" stroke="#3aa845" stroke-width="5" stroke-linecap="round"/><path d="M32 34C32 20 20 12 8 14C8 28 18 36 32 34Z" fill="url(#@@a)"/><path d="M32 28C32 16 42 8 56 10C56 24 46 32 32 28Z" fill="url(#@@a)"/><path d="M14 58H50" stroke="#8b5a2b" stroke-width="5" stroke-linecap="round"/></g>',
+ bolt: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fffbd0"/><stop offset=".55" stop-color="#ffe14d"/><stop offset="1" stop-color="#ff9f1c"/></linearGradient></defs><g class="a-flick" style="filter:drop-shadow(0 0 4px #ffd23f)"><path d="M37 3L12 36H28L22 61L52 25H35Z" fill="url(#@@a)"/></g>',
+ star: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6bf"/><stop offset=".55" stop-color="#ffd84a"/><stop offset="1" stop-color="#f2a60d"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 4px #ffd84a)"><path d="M32 4L40 24L60 25L44 38L50 58L32 46L14 58L20 38L4 25L24 24Z" fill="url(#@@a)" stroke="#fff3b0" stroke-width="1.500" stroke-linejoin="round"/></g>',
+ drop: '<defs><radialGradient id="@@a" cx=".38" cy=".35" r=".8"><stop offset="0" stop-color="#e6f9ff"/><stop offset=".55" stop-color="#4db8ff"/><stop offset="1" stop-color="#1d6fd8"/></radialGradient></defs><g style="filter:drop-shadow(0 0 4px #4db8ff)"><path d="M32 5C32 5 13 28 13 41A19 19 0 0 0 51 41C51 28 32 5 32 5Z" fill="url(#@@a)"/><path d="M22 40A10 10 0 0 0 30 52" fill="none" stroke="#fff" stroke-width="3.500" stroke-linecap="round" opacity=".7"/></g>',
+ sun: '<defs><radialGradient id="@@a" cx=".38" cy=".35" r=".8"><stop offset="0" stop-color="#fff6b0"/><stop offset=".55" stop-color="#ffc233"/><stop offset="1" stop-color="#f57c00"/></radialGradient></defs><g class="a-spin" style="filter:drop-shadow(0 0 4px #ffa62b)"><g stroke="#ffb703" stroke-width="5" stroke-linecap="round"><path transform="rotate(0 32 32)" d="M32 5V12"/><path transform="rotate(45 32 32)" d="M32 5V12"/><path transform="rotate(90 32 32)" d="M32 5V12"/><path transform="rotate(135 32 32)" d="M32 5V12"/><path transform="rotate(180 32 32)" d="M32 5V12"/><path transform="rotate(225 32 32)" d="M32 5V12"/><path transform="rotate(270 32 32)" d="M32 5V12"/><path transform="rotate(315 32 32)" d="M32 5V12"/></g><circle cx="32" cy="32" r="14" fill="url(#@@a)"/></g>',
+ planet: '<defs><radialGradient id="@@a" cx=".38" cy=".35" r=".8"><stop offset="0" stop-color="#ffd9fb"/><stop offset=".55" stop-color="#b96bff"/><stop offset="1" stop-color="#4b2a9b"/></radialGradient></defs><g style="filter:drop-shadow(0 0 4px #b96bff)"><circle cx="32" cy="32" r="16" fill="url(#@@a)"/><ellipse cx="32" cy="34" rx="29" ry="9" transform="rotate(-22 32 34)" fill="none" stroke="#ffe08a" stroke-width="4"/><path d="M12 29A16 16 0 0 1 32 16" fill="none" stroke="#fff" stroke-width="2" opacity=".4" stroke-linecap="round"/></g>',
+ snow: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#4dc9ff"/></linearGradient></defs><g class="a-spin" style="filter:drop-shadow(0 0 4px #7fe0ff)"><g fill="none" stroke="url(#@@a)" stroke-width="4" stroke-linecap="round"><g transform="rotate(0 32 32)"><path d="M32 6V58"/><path d="M25 13L32 20L39 13M25 51L32 44L39 51"/></g><g transform="rotate(60 32 32)"><path d="M32 6V58"/><path d="M25 13L32 20L39 13M25 51L32 44L39 51"/></g><g transform="rotate(120 32 32)"><path d="M32 6V58"/><path d="M25 13L32 20L39 13M25 51L32 44L39 51"/></g></g><circle cx="32" cy="32" r="4" fill="#fff"/></g>',
+ note: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd1f0"/><stop offset=".55" stop-color="#ff7ad9"/><stop offset="1" stop-color="#b92bd6"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 4px #ff7ad9)"><path d="M24 46V14L52 8V40" fill="none" stroke="url(#@@a)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 14L52 8V22L24 28Z" fill="url(#@@a)"/><ellipse cx="17" cy="47" rx="9" ry="7" fill="url(#@@a)"/><ellipse cx="45" cy="41" rx="9" ry="7" fill="url(#@@a)"/></g>',
+ rocket: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#dfe5ff"/><stop offset="1" stop-color="#7a86d8"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 4px #9ab0ff)"><path d="M32 3C43 13 45 28 43 42H21C19 28 21 13 32 3Z" fill="url(#@@a)"/><path d="M21 34L8 50L22 46Z M43 34L56 50L42 46Z" fill="#ff4d6d"/><circle cx="32" cy="24" r="6" fill="#4dd0ff" stroke="#3a4ba8" stroke-width="2.500"/><path d="M27 46Q32 64 37 46Z" fill="#ffb703"/></g>',
+ compass: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f4ff"/><stop offset=".55" stop-color="#aab4ff"/><stop offset="1" stop-color="#5a64c8"/></linearGradient></defs><g class="a-tick" style="filter:drop-shadow(0 0 4px #9ab0ff)"><circle cx="32" cy="32" r="25" fill="none" stroke="url(#@@a)" stroke-width="5"/><path d="M32 12L39 32L32 52L25 32Z" fill="#ff4d6d"/><path d="M32 52L25 32H39Z" fill="#f4f7ff"/><circle cx="32" cy="32" r="3.500" fill="#2a2f6b"/><path d="M32 4V9M32 55V60M4 32H9M55 32H60" stroke="#c5ccff" stroke-width="2.500" stroke-linecap="round"/></g>',
+ alien: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0c8ff"/><stop offset=".55" stop-color="#b56cff"/><stop offset="1" stop-color="#6a1bd6"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 4px #b56cff)"><rect x="15.2" y="10.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="42.8" y="10.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="19.8" y="15.6" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="38.2" y="15.6" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="15.2" y="21.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="19.8" y="21.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="24.4" y="21.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="29.0" y="21.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="33.6" y="21.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="38.2" y="21.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="42.8" y="21.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="10.6" y="26.8" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="15.2" y="26.8" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="24.4" y="26.8" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="29.0" y="26.8" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="33.6" y="26.8" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="42.8" y="26.8" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="47.4" y="26.8" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="6.0" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="10.6" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="15.2" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="19.8" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="24.4" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="29.0" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="33.6" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="38.2" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="42.8" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="47.4" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="52.0" y="32.4" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="6.0" y="38.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="15.2" y="38.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="19.8" y="38.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="24.4" y="38.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="29.0" y="38.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="33.6" y="38.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="38.2" y="38.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="42.8" y="38.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="52.0" y="38.0" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="6.0" y="43.6" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="15.2" y="43.6" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="42.8" y="43.6" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="52.0" y="43.6" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="19.8" y="49.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="24.4" y="49.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="33.6" y="49.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="38.2" y="49.2" width="4.7" height="5.7" rx="1" fill="url(#@@a)"/><rect x="19" y="26" width="5.500" height="6" fill="#2b0f58"/><rect x="40" y="26" width="5.500" height="6" fill="#2b0f58"/></g>',
+ rainbow: '<defs></defs><g style="filter:drop-shadow(0 0 4px #c5b3ff)"><path d="M6 50A26 26 0 0 1 58 50" fill="none" stroke="#ff4d6d" stroke-width="5" stroke-linecap="butt"/><path d="M11 50A21 21 0 0 1 53 50" fill="none" stroke="#ffb703" stroke-width="5" stroke-linecap="butt"/><path d="M16 50A16 16 0 0 1 48 50" fill="none" stroke="#7ae582" stroke-width="5" stroke-linecap="butt"/><path d="M21 50A11 11 0 0 1 43 50" fill="none" stroke="#4dc9ff" stroke-width="5" stroke-linecap="butt"/><path d="M26 50A6 6 0 0 1 38 50" fill="none" stroke="#a78bff" stroke-width="5" stroke-linecap="butt"/><ellipse cx="9" cy="52" rx="8" ry="6" fill="#fff"/><ellipse cx="55" cy="52" rx="8" ry="6" fill="#fff"/></g>',
+ galaxy: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd1ff"/><stop offset=".55" stop-color="#c77dff"/><stop offset="1" stop-color="#5a2bd6"/></linearGradient><radialGradient id="@@b"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#ff9ad5" stop-opacity="0"/></radialGradient></defs><g style="filter:drop-shadow(0 0 4px #a78bff)"><g class="a-spin"><path d="M32 32C32 23 43 21 47 28C53 38 40 50 28 48C14 46 10 29 20 19C30 8 50 10 57 24" fill="none" stroke="url(#@@a)" stroke-width="5" stroke-linecap="round"/><path d="M32 32C32 41 21 43 17 36C11 26 24 14 36 16C50 18 54 35 44 45C34 56 14 54 7 40" fill="none" stroke="url(#@@a)" stroke-width="3" stroke-linecap="round" opacity=".6"/></g><circle cx="32" cy="32" r="9" fill="url(#@@b)"/></g>',
+ diamond: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6fbff"/><stop offset=".55" stop-color="#6ad6ff"/><stop offset="1" stop-color="#2a7fd6"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 4px #4dd0ff)"><path d="M16 10H48L58 24L32 58L6 24Z" fill="url(#@@a)"/><path d="M6 24H58M16 10L24 24L32 58L40 24L48 10M24 24L32 10L40 24" fill="none" stroke="#fff" stroke-width="1.800" stroke-linejoin="round" opacity=".7"/></g>',
+ crown: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".55" stop-color="#ffc93c"/><stop offset="1" stop-color="#d98a00"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 4px #ffc93c)"><path d="M7 20L20 34L32 8L44 34L57 20L51 49H13Z" fill="url(#@@a)"/><rect x="13" y="49" width="38" height="8" rx="2" fill="url(#@@a)"/><circle cx="7" cy="19" r="4" fill="#ff4d6d"/><circle cx="32" cy="8" r="4.500" fill="#4dd0ff"/><circle cx="57" cy="19" r="4" fill="#ff4d6d"/><circle cx="32" cy="38" r="4" fill="#a78bff"/></g>',
+ trophy: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".55" stop-color="#ffc93c"/><stop offset="1" stop-color="#d98a00"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 4px #ffc93c)"><path d="M17 6H47V26A15 15 0 0 1 17 26Z" fill="url(#@@a)"/><path d="M17 12H7C7 26 12 30 19 31M47 12H57C57 26 52 30 45 31" fill="none" stroke="url(#@@a)" stroke-width="4" stroke-linecap="round"/><rect x="28" y="40" width="8" height="10" fill="url(#@@a)"/><rect x="18" y="50" width="28" height="8" rx="3" fill="url(#@@a)"/><path d="M23 12V24" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".6"/></g>',
+ goldarrow: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#ffc93c"/><stop offset="1" stop-color="#e08a00"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 3px #ffb300)"><path d="M12 54V34H36" fill="none" stroke="url(#@@a)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 18L56 34L34 50Z" fill="url(#@@a)" stroke="url(#@@a)" stroke-width="3" stroke-linejoin="round"/></g>',
+ key: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6fbff"/><stop offset=".55" stop-color="#6ad6ff"/><stop offset="1" stop-color="#3a7bd5"/></linearGradient></defs><g style="filter:drop-shadow(0 0 3px #4dd0ff)"><circle cx="22" cy="22" r="12" fill="none" stroke="url(#@@a)" stroke-width="7"/><path d="M31 31L54 54M44 44L50 38M51 51L57 45" fill="none" stroke="url(#@@a)" stroke-width="6" stroke-linecap="round"/><circle cx="22" cy="22" r="3" fill="#fff" opacity=".8"/></g>',
+ orb: '<defs><radialGradient id="@@a" cx=".38" cy=".35" r=".75"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="#d8b4ff"/><stop offset=".65" stop-color="#8b5cf6"/><stop offset="1" stop-color="#3b1e8a"/></radialGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 6px #a855f7)"><circle cx="32" cy="32" r="22" fill="url(#@@a)"/><ellipse cx="24" cy="22" rx="7" ry="4" fill="#fff" opacity=".55" transform="rotate(-30 24 22)"/></g>',
+ neonheart: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ad5"/><stop offset="1" stop-color="#ff3d81"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 5px #ff3d81)"><path d="M32 54C10 38 6 24 14 16C21 9 29 13 32 20C35 13 43 9 50 16C58 24 54 38 32 54Z" fill="rgba(255,61,129,.18)" stroke="url(#@@a)" stroke-width="4.5" stroke-linejoin="round"/><path d="M18 22C20 18 25 18 27 22" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".7"/></g>',
+ bulb: '<defs><radialGradient id="@@a" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#fffbe0"/><stop offset=".6" stop-color="#ffe066"/><stop offset="1" stop-color="#ffb703"/></radialGradient></defs><g class="a-flick" style="filter:drop-shadow(0 0 5px #ffd60a)"><path d="M32 6C20 6 12 15 12 26c0 7 4 11 8 15v5h24v-5c4-4 8-8 8-15C52 15 44 6 32 6Z" fill="url(#@@a)"/><path d="M26 40L30 28L32 32L34 28L38 40" fill="none" stroke="#c77700" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g><rect x="22" y="48" width="20" height="5" rx="2.5" fill="#9aa0c8"/><rect x="25" y="54" width="14" height="5" rx="2.5" fill="#7b81ad"/>',
+ mango: '<defs><linearGradient id="@@a" x1=".1" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#ffe066"/><stop offset=".5" stop-color="#ffa62b"/><stop offset="1" stop-color="#ef4b2f"/></linearGradient></defs><g style="filter:drop-shadow(0 0 3px rgba(255,150,40,.6))"><path d="M30 14C48 10 58 28 51 43C45 56 24 59 14 45C8 33 15 17 30 14Z" fill="url(#@@a)"/><path d="M31 14C34 6 44 4 50 9C46 16 38 17 31 14Z" fill="#3fbf6a"/><path d="M31 14C34 10 40 8 46 9" stroke="#1f8f4a" stroke-width="1.6" fill="none"/><ellipse cx="24" cy="30" rx="4" ry="8" fill="#fff" opacity=".28" transform="rotate(20 24 30)"/></g>',
+ flame: '<defs><linearGradient id="@@a" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff3d00"/><stop offset=".6" stop-color="#ff9100"/><stop offset="1" stop-color="#ffd54a"/></linearGradient></defs><g class="a-flick2" style="filter:drop-shadow(0 0 5px #ff7a00)"><path d="M32 5C35 18 47 24 47 39C47 51 40 59 32 59C24 59 17 51 17 39C17 31 22 27 25 20C27 25 29 27 31 27C30 19 28 12 32 5Z" fill="url(#@@a)"/><path d="M32 30C35 36 41 39 41 46C41 52 37 56 32 56C27 56 23 52 23 46C23 41 27 39 28 34C29 36 30 37 31 37C30 34 30 32 32 30Z" fill="#ffe27a"/></g>',
+ crystal: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8f3ff"/><stop offset="1" stop-color="#4dd0ff"/></linearGradient><linearGradient id="@@b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9c7bff"/><stop offset="1" stop-color="#4b2fd0"/></linearGradient><linearGradient id="@@c" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9ad5"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><g style="filter:drop-shadow(0 0 5px #8b5cf6)"><polygon points="32,5 52,18 32,32 12,18" fill="url(#@@a)"/><polygon points="12,18 32,32 32,59 12,44" fill="url(#@@b)"/><polygon points="52,18 52,44 32,59 32,32" fill="url(#@@c)"/><polygon points="32,5 52,18 32,32 12,18" fill="#fff" class="a-shine"/></g>',
+ timemaster: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ff5e4"/><stop offset="1" stop-color="#2bb3c0"/></linearGradient></defs><g style="filter:drop-shadow(0 0 4px #2dd4bf)"><rect x="27" y="5" width="10" height="6" rx="2" fill="url(#@@a)"/><path d="M47 14L51 10" stroke="url(#@@a)" stroke-width="4.5" stroke-linecap="round"/><circle cx="32" cy="36" r="21" fill="rgba(45,212,191,.15)" stroke="url(#@@a)" stroke-width="5"/><path d="M32 36V24" stroke="#e6fffb" stroke-width="3.2" stroke-linecap="round"/><g class="a-tick"><path d="M32 36L32 19" stroke="#ff6b7a" stroke-width="2.2" stroke-linecap="round"/></g><circle cx="32" cy="36" r="3" fill="#e6fffb"/></g>',
+ duo: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9ad5"/><stop offset="1" stop-color="#ff3d81"/></linearGradient><linearGradient id="@@b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9be7ff"/><stop offset="1" stop-color="#3a7bd5"/></linearGradient></defs><g class="a-pulse" style="filter:drop-shadow(0 0 4px #c77dff)"><path transform="translate(-1 14) scale(.66)" d="M32 54C10 38 6 24 14 16C21 9 29 13 32 20C35 13 43 9 50 16C58 24 54 38 32 54Z" fill="url(#@@a)"/><path transform="translate(23 6) scale(.66)" d="M32 54C10 38 6 24 14 16C21 9 29 13 32 20C35 13 43 9 50 16C58 24 54 38 32 54Z" fill="url(#@@b)" opacity=".92"/></g>',
+ comet: '<defs><linearGradient id="@@a" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9be7ff" stop-opacity=".95"/><stop offset="1" stop-color="#4dd0ff" stop-opacity="0"/></linearGradient><radialGradient id="@@b"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#7dd3fc"/></radialGradient></defs><g style="filter:drop-shadow(0 0 5px #4dd0ff)"><path d="M46 16L6 52L12 58L50 22Z" fill="url(#@@a)"/><path d="M44 14L4 44L10 50Z" fill="url(#@@a)" opacity=".6"/><circle cx="46" cy="18" r="10" fill="url(#@@b)"/></g><g class="a-shine"><path d="M18 10v8M14 14h8M54 40v6M51 43h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/></g>',
+ arrowmaster: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9ad5"/><stop offset=".5" stop-color="#c77dff"/><stop offset="1" stop-color="#6ad6ff"/></linearGradient></defs><g style="filter:drop-shadow(0 0 5px #c77dff)"><circle cx="32" cy="32" r="27" fill="none" stroke="url(#@@a)" stroke-width="1.6" opacity=".5"/><g class="a-spin"><g id="@@r"><path d="M16 11H37" stroke="url(#@@a)" stroke-width="4" stroke-linecap="round"/><polygon points="35,5 48,11 35,17" fill="url(#@@a)"/></g><use href="#@@r" transform="rotate(90 32 32)"/><use href="#@@r" transform="rotate(180 32 32)"/><use href="#@@r" transform="rotate(270 32 32)"/></g><polygon class="a-pulse" points="32,24 40,32 32,40 24,32" fill="url(#@@a)"/></g>'
+};
+let artN = 0;
+const artSvg = id => '<svg class="cart" viewBox="0 0 64 64" aria-hidden="true">' + ART[id].replace(/@@/g, 'k' + (++artN) + '-') + '</svg>';
+const glyphHtml = it => ART[it[0]] ? artSvg(it[0]) : it[1];
+const stats = Object.assign({streak:0, online:0}, store.get('arrow-stats', {}));
+const saveStats = () => store.set('arrow-stats', stats);
+const MILE = {                                                       // milestone items: unlocked by doing something, not by luck
+  goldarrow: () => (store.get('arrow-level', 1) | 0) > 10,
+  timemaster: () => (store.get('arrow-chal', 1) | 0) > 5,
+  duo: () => stats.online >= 1,
+  comet: () => stats.streak >= 10,
+  arrowmaster: () => (store.get('arrow-level', 1) | 0) > 40
+};
+function awardMilestone(){
+  for (const i of ITEMS) if (i[4] && !owned.includes(i[0]) && MILE[i[0]] && MILE[i[0]]()){ lastDrop = i; owned.push(i[0]); store.set('arrow-coll', owned); return true; }
+  return false;
+}
 function rollDrop(chance = 0.35){
   lastDrop = null;
-  const left = ITEMS.filter(i => !owned.includes(i[0]));
+  const left = ITEMS.filter(i => !owned.includes(i[0]) && !i[4]);   // milestone items never drop by luck
   if (!left.length || Math.random() > chance) return;               // roughly 1 win in 3 drops something
   let r = Math.random() * left.reduce((t,i) => t + RARITY[i[3]].w, 0);
   for (const i of left){ r -= RARITY[i[3]].w; if (r <= 0){ lastDrop = i; break; } }
@@ -1095,7 +1170,9 @@ function finish(lost, msg){
   over = true; stopChallenge(); updateUI();
   lastWin = !lost; lastDrop = null;
   const firstClear = levelMode != null && !lost && levelMode >= lvCur;     // collectibles drop only the first time a level is cleared
-  if (firstClear){ rollDrop(chal ? 0.7 : 0.35); lvCur = levelMode + 1; store.set(chal ? 'arrow-chal' : 'arrow-level', lvCur); }
+  stats.streak = lost ? 0 : stats.streak + 1; saveStats();
+  if (firstClear){ lvCur = levelMode + 1; store.set(chal ? 'arrow-chal' : 'arrow-level', lvCur); }
+  if (!lost && !awardMilestone() && firstClear) rollDrop(chal ? 0.7 : 0.35);
   if (players.length === 1){
     setStatus(lost ? (msg ? msg + ' Tap New to try again.' : 'Out of hearts. Tap New to try again.') : 'Cleared! Tap New for another board.');
     const hl = players[0].hearts;
@@ -1172,9 +1249,9 @@ function showEnd(win, title, sub, delay){
     const guest = room && role === 'g';
     const lvWin = win && levelMode != null && !room;
     $('endcard').classList.toggle('bare', lvWin);
-    if (win) $('etrophy').innerHTML = TROPHY; else if (title === 'Out of time!') $('etrophy').innerHTML = CLOCK; else $('etrophy').textContent = '\uD83D\uDC94';
+    if (win) $('etrophy').innerHTML = (lastDrop && ART[lastDrop[0]]) ? artSvg(lastDrop[0]) : TROPHY; else if (title === 'Out of time!') $('etrophy').innerHTML = CLOCK; else $('etrophy').textContent = '\uD83D\uDC94';
     $('etitle').textContent = lvWin ? PRAISE[Math.floor(Math.random()*PRAISE.length)] : title;
-    $('esub').textContent = (win && lastDrop) ? 'New collectible: ' + lastDrop[1] + ' ' + lastDrop[2] + ' (' + lastDrop[3] + ')' : (sub || (guest ? 'Waiting for the host to start a new game.' : ''));
+    $('esub').textContent = (win && lastDrop) ? 'New collectible: ' + (ART[lastDrop[0]] ? '\u2728' : lastDrop[1]) + ' ' + lastDrop[2] + ' (' + lastDrop[3] + ')' : (sub || (guest ? 'Waiting for the host to start a new game.' : ''));
     $('enew').hidden = !!guest || lvWin;
     $('ehome').hidden = lvWin || levelMode == null;
     $('eclose').hidden = lvWin || levelMode != null;
@@ -1307,7 +1384,7 @@ function renderLevels(){
 }
 
 function renderProfile(){
-  $('avbtn').textContent = prefs.avatar;
+  if (String(prefs.avatar).startsWith('art:') && ART[prefs.avatar.slice(4)]) $('avbtn').innerHTML = artSvg(prefs.avatar.slice(4)); else $('avbtn').textContent = prefs.avatar;
   $('nameVal').textContent = prefs.name;
   $('collVal').textContent = owned.length + ' / ' + ITEMS.length + '  \u203A';
   $('darkTg').classList.toggle('on', prefs.dark);
@@ -1325,9 +1402,9 @@ function openModal(html, wire){
 $('modal').onclick = e => { if (e.target === $('modal')) $('modal').hidden = true; };
 $('avbtn').onclick = () => {
   const list = ['\uD83D\uDE42','\uD83D\uDE0E','\uD83E\uDD13','\uD83E\uDD20','\uD83E\uDD8A','\uD83D\uDC3C','\uD83D\uDC38','\uD83D\uDC2F','\uD83E\uDD81','\uD83D\uDC19','\uD83D\uDC7E','\uD83D\uDE80'];
-  owned.forEach(id => { const it = ITEMS.find(i => i[0] === id); if (it && !list.includes(it[1])) list.push(it[1]); });
+  owned.forEach(id => { const it = ITEMS.find(i => i[0] === id); if (!it) return; const v = ART[id] ? 'art:' + id : it[1]; if (!list.includes(v)) list.push(v); });
   openModal('<h3>Choose avatar</h3><div id="avopts"></div>', () => {
-    list.forEach(e => { const b = document.createElement('button'); b.textContent = e; b.onclick = () => { prefs.avatar = e; savePrefs(); renderProfile(); $('modal').hidden = true; }; $('avopts').appendChild(b); });
+    list.forEach(e => { const b = document.createElement('button'); if (e.startsWith('art:')) b.innerHTML = artSvg(e.slice(4)); else b.textContent = e; b.onclick = () => { prefs.avatar = e; savePrefs(); renderProfile(); $('modal').hidden = true; }; $('avopts').appendChild(b); });
   });
 };
 $('nameRow').onclick = () => openModal('<h3>Username</h3><input id="nameIn" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false"><p id="nameHint" style="text-align:center;font-size:13px;opacity:.7;margin-top:-8px">A-Z, a-z, 0-9, - and _ only. No spaces.</p><button id="nameOk" class="primary">Save</button>', () => {
@@ -1348,11 +1425,13 @@ function applyTheme(){
 $('darkRow').onclick = () => { prefs.dark = !prefs.dark; savePrefs(); applyTheme(); renderProfile(); };
 $('vibRow').onclick = () => { prefs.vib = !prefs.vib; savePrefs(); renderProfile(); haptic(25); };
 $('sndRow').onclick = () => { prefs.snd = !prefs.snd; savePrefs(); renderProfile(); sfx('ok'); };
-$('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + ITEMS.length + '</h3><p style="text-align:center">Win levels for a chance to find exclusive items.</p><div id="cgrid"></div>', () => {
+$('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + ITEMS.length + '</h3><p style="text-align:center">Win levels for a chance to find exclusive items. Some are unlocked by milestones.</p><div id="cgrid"></div>', () => {
   ITEMS.forEach(i => {
     const got = owned.includes(i[0]), d = document.createElement('div');
     d.className = 'ci' + (got ? '' : ' no'); d.style.setProperty('--rc', RARITY[i[3]].c);
-    d.innerHTML = '<b></b><small></small>'; d.firstChild.textContent = got ? i[1] : '?'; d.lastChild.textContent = got ? i[2] : i[3];
+    d.innerHTML = '<b></b><small></small>';
+    if (ART[i[0]]) d.firstChild.innerHTML = artSvg(i[0]); else d.firstChild.textContent = got ? i[1] : '?';
+    d.lastChild.textContent = got ? i[2] : (i[4] || i[3]);
     $('cgrid').appendChild(d);
   });
 });
@@ -1528,6 +1607,7 @@ function applyEvent(ev){
     if (removed === total){
       over = true; updateUI();
       const me = role==='h' ? team.h : team.g, fr = role==='h' ? team.g : team.h;
+      lastDrop = null; stats.streak++; stats.online++; saveStats(); awardMilestone();
       showEnd(true, 'Congratulations! You Won', '', 800);
       return setStatus(`Cleared together! You ${me} · Friend ${fr}. ${role==='h' ? 'Tap New for another board.' : 'Host can start the next one.'}`);
     }
@@ -1539,7 +1619,7 @@ function applyEvent(ev){
     haptic(60); sfx('bad');
     team.hearts--;
     if (team.hearts <= 0){
-      over = true; updateUI();
+      over = true; updateUI(); stats.streak = 0; saveStats();
       showEnd(false, 'Out of hearts!', '', 700);
       return setStatus(`Out of hearts. Cleared ${removed} of ${total}. ${role==='h' ? 'Tap New to retry.' : 'Host can start a new game.'}`);
     }
@@ -1881,7 +1961,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.56.27'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.57.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
