@@ -12,7 +12,8 @@
 <title>Arrow Escape</title>
 <script>try{if(JSON.parse(localStorage.getItem("arrow-prefs")).dark===false)document.documentElement.dataset.theme="light"}catch(e){}</script>
 <style>
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  input,textarea{-webkit-user-select:text;user-select:text}
   html{color-scheme:dark;background:#1d1f2e}
   html,body{margin:0;height:100%;min-height:100vh;min-height:100dvh;overscroll-behavior:none;background:#1d1f2e;color:#c5cbff;font-family:system-ui,sans-serif}
   #app{display:flex;flex-direction:column;height:100vh;height:100dvh;padding-bottom:env(safe-area-inset-bottom);box-sizing:border-box}
@@ -184,9 +185,12 @@
   html[data-theme=light] #home .big.fill{background:#5b66e8;color:#fff}
   html[data-theme=light] #home .big.line{color:#5b66e8;border-color:#5b66e8}
   #hinfo{position:absolute;left:calc(100% + 14px);top:50%;transform:translateY(-50%);width:30px;height:30px;padding:0;background:none;border:0;box-shadow:none;color:#a5acff;display:flex;align-items:center;justify-content:center;border-radius:50%}
+  #hinfo{z-index:1}
   #hinfo svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
   #hinfo:active{background:rgba(165,172,255,.18);transform:translateY(-50%)}
-  #hinfo{opacity:.45}
+  #hinfo{opacity:.45;transition:transform .6s cubic-bezier(.2,.9,.25,1.15),opacity .45s ease}
+  #hinfo.tuck{transform:translateY(-50%) translateX(-52px) scale(.55);opacity:0;pointer-events:none}   /* hidden behind the Play with friend button */
+  #home .homerow .hb{position:relative;z-index:2}
   #hinfo:active{opacity:.8}
   html[data-theme=light] #hinfo{color:#5b66e8}
   .big:active{transform:translateY(3px);filter:brightness(1.12);box-shadow:0 1px 0 #191a3a,0 3px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}
@@ -294,7 +298,8 @@
   #modal .card h3{text-align:center}
   #modal .card p{margin:0;font-size:14px;line-height:1.5;opacity:.85}
   #modal .card input{text-transform:none;letter-spacing:0;font-size:17px}
-  #modal .card{max-height:82vh;overflow:auto}
+  #modal .card{max-height:82vh;overflow:auto;scrollbar-width:none}
+  #modal .card::-webkit-scrollbar{display:none}
   #cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   .ci{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border-radius:12px;background:rgba(165,175,255,.1);border:1.5px solid var(--rc)}
   .ci b{font-size:28px;line-height:1.2;font-weight:400}
@@ -1271,9 +1276,10 @@ function confettiLoop(now){
 }
 
 let winGlow = null;                                            // after the last arrow: the board's shape lights up before the end card
-const GLOW_MS = 1300;                                          // whole win show; the animation below is designed for 1500 and is squeezed to fit
+const GLOW_MS = 1100;                                          // whole win show; the animation below is designed for 1500 and is squeezed to fit
 function showEnd(win, title, sub, delay){
   hideEnd();
+  if (win) delay = Math.min(delay, 450);                        // celebrate right after the last arrow
   if (win){ winGlow = {t0: performance.now() + Math.max(0, delay - 250)}; delay += GLOW_MS; }
   endTimer = setTimeout(() => {                                  // let the last arrow finish leaving first
     endTimer = 0;
@@ -1324,6 +1330,7 @@ function showScreen(name){
   const isLv = name === 'levels';
   $('home').hidden = name !== 'home'; $('profile').hidden = name !== 'profile'; $('levels').hidden = !isLv;
   $('tabs').hidden = !name;
+  homeInfoCycle(name === 'home');
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.t === name));
   if (isLv){
     renderLevels();
@@ -1331,6 +1338,14 @@ function showScreen(name){
   if (name === 'profile') renderProfile();
 }
 
+let hiT = 0;
+function homeInfoCycle(on){                                      // the (i) slides out after 2s, stays 5s, hides 5s, and repeats while Home is open
+  clearTimeout(hiT);
+  $('hinfo').classList.add('tuck');
+  if (!on) return;
+  const step = show => { $('hinfo').classList.toggle('tuck', !show); hiT = setTimeout(() => step(!show), 5000); };
+  hiT = setTimeout(() => step(true), 2000);
+}
 function goHome(tab){
   hideEnd();
   if (room) leaveRoom();                                         // leaving an online room closes it for you
@@ -2016,7 +2031,8 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.57.3'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+homeInfoCycle(!$('home').hidden);
+const VERSION = '1.57.6'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
