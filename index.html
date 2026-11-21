@@ -810,8 +810,8 @@ function genClassic(n, rng = Math.random){
    Result: few arrows are free at the start and the escape order is a long chain.
    Only rng() is used (no sort(), no Math.random), so both phones build the identical board. */
 const HARD = {
-  Hard:      {name:'Hard', minLen:2, maxLen:6, straight:0.45, longBias:0.9, refill:2},
-  Nightmare: {name:'Nightmare', minLen:2, maxLen:6, straight:0.40, longBias:0.9, refill:2},
+  Hard:      {name:'Hard', minLen:2, maxLen:6, straight:0.45, longBias:0.9, refill:2, long:true},
+  Nightmare: {name:'Nightmare', minLen:2, maxLen:6, straight:0.40, longBias:0.9, refill:2, long:true},
   Medium:    {name:'Medium', minLen:2, maxLen:6, straight:0.50, longBias:0.95, refill:1},
   Easy:      {name:'Easy', minLen:2, maxLen:4, straight:0.70, longBias:0.55, refill:1}
 };
@@ -901,6 +901,38 @@ function genDense(n, rng, cfg, mask){
   };
   const shuffle = arr => { for (let i = arr.length-1; i > 0; i--){ const j = R(i+1), t = arr[i]; arr[i] = arr[j]; arr[j] = t; } };
 
+  function carveLong(){                                   // Hard / Nightmare: 1-2 long arrows, each taking 5-10% of the board (normal ones take 1-2%)
+    const total = own.filter(v => v === -1).length, count = 1 + (rng() < 0.5 ? 1 : 0);
+    const nbrs = (x, y) => DIRS.filter(d => inb(x+d[0], y+d[1]) && own[(y+d[1])*n + x+d[0]] === -1);
+    for (let k = 0; k < count; k++){
+      const target = Math.round(total * (0.05 + 0.05*rng())), floor = Math.max(8, Math.round(total*0.05));
+      let best = null;
+      for (let tries = 0; tries < 60 && !(best && best.length >= target); tries++){
+        let idx; do { idx = R(n*n); } while (own[idx] !== -1);
+        const path = [[idx % n, Math.floor(idx / n)]]; own[idx] = -2;
+        let last = null;
+        while (path.length < target){
+          const [cx, cy] = path[path.length-1], opts = nbrs(cx, cy);
+          if (!opts.length) break;
+          let d;
+          if (last && opts.includes(last) && rng() < 0.55) d = last;                          // run straight for a while
+          else {                                                                              // otherwise hug walls / filled cells so the snake doesn't trap itself
+            let m = 9, pick = [];
+            for (const o of opts){ const c = nbrs(cx+o[0], cy+o[1]).length; if (c < m){ m = c; pick = [o]; } else if (c === m) pick.push(o); }
+            d = pick[R(pick.length)];
+          }
+          last = d; path.push([cx+d[0], cy+d[1]]); own[(cy+d[1])*n + cx+d[0]] = -2;
+        }
+        for (const [x, y] of path) own[y*n+x] = -1;
+        if (!best || path.length > best.length) best = path;
+      }
+      if (best && best.length >= floor){
+        const a = {id:all.length, path:best, dx:0, dy:0, alive:true, fresh:true, keep:true, tc:{longBias:0.9, straight:0.6, minLen:2, maxLen:6}};
+        all.push(a); best.forEach(([x,y]) => own[y*n+x] = a.id);
+      }
+    }
+  }
+
   function cover(){                                       // fill every empty cell with short snakes
     const empty = [];
     for (let i = 0; i < n*n; i++) if (own[i] === -1) empty.push(i);
@@ -969,13 +1001,14 @@ function genDense(n, rng, cfg, mask){
         a.path.reverse(); setDir(a);
       }
       if (!fixed){
-        const a = left[0];                                // stuck for good: remove it
+        const a = left.find(x => !x.keep) || left[0];     // stuck for good: remove it (the long arrows are kept if anything else can go)
         a.alive = false; clear(a); a.path.forEach(([x,y]) => own[y*n+x] = -1);
-        left = left.slice(1);
+        left = left.filter(x => x !== a);
       }
     }
   }
 
+  if (cfg.long) carveLong();
   for (let round = 0; round <= cfg.refill + 12; round++){ // later rounds refill the holes left by removed arrows
     cover();
     for (const a of all) if (a.alive){ if (a.fresh) orient(a); else setDir(a); }
@@ -2067,7 +2100,7 @@ function frame(now){
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
 homeInfoCycle(!$('home').hidden);
-const VERSION = '1.58.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.58.2'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
