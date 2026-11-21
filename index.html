@@ -299,6 +299,9 @@
   .ci{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border-radius:12px;background:rgba(165,175,255,.1);border:1.5px solid var(--rc)}
   .ci b{font-size:28px;line-height:1.2;font-weight:400}
   .ci small{font-size:10px;opacity:.75;text-align:center}
+  .ci .pb{display:block;width:70%;height:4px;border-radius:2px;background:rgba(255,255,255,.14);margin-top:3px}
+  .ci .pb u{display:block;height:100%;border-radius:2px;background:var(--rc)}
+  .ci em{font-style:normal;font-size:10px;opacity:.6}
   .ci.no{border-color:transparent}
   .ci.no b{opacity:.35;font-size:24px;line-height:1.4}
   #endcard.bare,html[data-theme=light] #endcard.bare{background:transparent}
@@ -325,6 +328,10 @@
   .cart .a-spin{transform-origin:32px 32px;animation:cspin 9s linear infinite}
   .cart .a-tick{transform-origin:32px 36px;animation:cspin 4s linear infinite}
   .cart .a-shine{animation:cshine 2.2s ease-in-out infinite}
+  .cart .a-float{transform-origin:32px 32px;animation:cfloat 3s ease-in-out infinite}
+  .cart .a-sway{transform-origin:32px 54px;animation:csway 3.2s ease-in-out infinite}
+  @keyframes cfloat{0%,100%{transform:translateY(1.5px)}50%{transform:translateY(-3px)}}
+  @keyframes csway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
   @keyframes cpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
   @keyframes cflick{0%,100%{transform:scale(1)}35%{transform:scale(.96,1.07)}70%{transform:scale(1.04,.97)}}
   @keyframes cspin{to{transform:rotate(360deg)}}
@@ -624,19 +631,41 @@ const ART = {
  arrowmaster: '<defs><linearGradient id="@@a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9ad5"/><stop offset=".5" stop-color="#c77dff"/><stop offset="1" stop-color="#6ad6ff"/></linearGradient></defs><g style="filter:drop-shadow(0 0 5px #c77dff)"><circle cx="32" cy="32" r="27" fill="none" stroke="url(#@@a)" stroke-width="1.6" opacity=".5"/><g class="a-spin"><g id="@@r"><path d="M16 11H37" stroke="url(#@@a)" stroke-width="4" stroke-linecap="round"/><polygon points="35,5 48,11 35,17" fill="url(#@@a)"/></g><use href="#@@r" transform="rotate(90 32 32)"/><use href="#@@r" transform="rotate(180 32 32)"/><use href="#@@r" transform="rotate(270 32 32)"/></g><polygon class="a-pulse" points="32,24 40,32 32,40 24,32" fill="url(#@@a)"/></g>'
 };
 let artN = 0;
-const artSvg = id => '<svg class="cart" viewBox="0 0 64 64" aria-hidden="true">' + ART[id].replace(/@@/g, 'k' + (++artN) + '-') + '</svg>';
+const ANIM = {plane:'a-float', clover:'a-sway', moon:'a-sway', cloud:'a-float', sprout:'a-sway', drop:'a-flick', planet:'a-float', rainbow:'a-float', key:'a-sway', mango:'a-float', crystal:'a-float', comet:'a-float'};   // every badge moves: those without their own motion get one here
+const artSvg = id => '<svg class="cart" viewBox="0 0 64 64" aria-hidden="true">' + (ANIM[id] ? '<g class="' + ANIM[id] + '">' + ART[id] + '</g>' : ART[id]).replace(/@@/g, 'k' + (++artN) + '-') + '</svg>';
 const glyphHtml = it => ART[it[0]] ? artSvg(it[0]) : it[1];
-const stats = Object.assign({streak:0, online:0}, store.get('arrow-stats', {}));
+const stats = Object.assign({streak:0, online:0, wins:0, perfect:0, arrows:0, days:0, lastDay:''}, store.get('arrow-stats', {}));
 const saveStats = () => store.set('arrow-stats', stats);
-const MILE = {                                                       // milestone items: unlocked by doing something, not by luck
-  goldarrow: () => (store.get('arrow-level', 1) | 0) > 10,
-  timemaster: () => (store.get('arrow-chal', 1) | 0) > 5,
-  duo: () => stats.online >= 1,
-  comet: () => stats.streak >= 10,
-  arrowmaster: () => (store.get('arrow-level', 1) | 0) > 40
+function touchDay(){                                                  // consecutive days played
+  const d = x => x.getFullYear() + '-' + (x.getMonth()+1) + '-' + x.getDate(), now = new Date(), y = new Date(now.getTime() - 864e5);
+  if (stats.lastDay === d(now)) return;
+  stats.days = stats.lastDay === d(y) ? stats.days + 1 : 1; stats.lastDay = d(now); saveStats();
+}
+touchDay();
+const lvDone = () => Math.max(0, (store.get('arrow-level', 1) | 0) - 1), chDone = () => Math.max(0, (store.get('arrow-chal', 1) | 0) - 1);
+const MILE = {                                                       // goal badges: t = what to do, v = progress now, g = goal. Locked cards show the goal and a progress bar.
+  sun:        {t:'Win 5 games',                         v:() => stats.wins,    g:5},
+  neonheart:  {t:'Play 3 days in a row',                v:() => stats.days,    g:3},
+  note:       {t:'Win 3 games in a row',                v:() => stats.streak,  g:3},
+  snow:       {t:'Win a game without losing a heart',   v:() => stats.perfect, g:1},
+  compass:    {t:'Clear Challenge level 3',             v:chDone,              g:3},
+  rocket:     {t:'Clear 500 arrows',                    v:() => stats.arrows,  g:500},
+  goldarrow:  {t:'Clear level 10',                      v:lvDone,              g:10},
+  timemaster: {t:'Clear Challenge level 5',             v:chDone,              g:5},
+  duo:        {t:'Win an online co-op game',            v:() => stats.online,  g:1},
+  planet:     {t:'Clear level 25',                      v:lvDone,              g:25},
+  alien:      {t:'Win 3 online co-op games',            v:() => stats.online,  g:3},
+  comet:      {t:'Win 10 games in a row',               v:() => stats.streak,  g:10},
+  rainbow:    {t:'Win 10 games without losing a heart', v:() => stats.perfect, g:10},
+  galaxy:     {t:'Clear Challenge level 15',            v:chDone,              g:15},
+  crown:      {t:'Clear level 30',                      v:lvDone,              g:30},
+  arrowmaster:{t:'Clear level 40',                      v:lvDone,              g:40},
+  diamond:    {t:'Clear 3000 arrows',                   v:() => stats.arrows,  g:3000},
+  trophy:     {t:'Win 100 games',                       v:() => stats.wins,    g:100}
 };
+ITEMS.forEach(i => { if (MILE[i[0]]) i[4] = MILE[i[0]].t; else i.length = 4; });
 function awardMilestone(){
-  for (const i of ITEMS) if (i[4] && !owned.includes(i[0]) && MILE[i[0]] && MILE[i[0]]()){ lastDrop = i; owned.push(i[0]); store.set('arrow-coll', owned); return true; }
+  for (const i of ITEMS) if (i[4] && !owned.includes(i[0]) && MILE[i[0]] && MILE[i[0]].v() >= MILE[i[0]].g){ lastDrop = i; owned.push(i[0]); store.set('arrow-coll', owned); return true; }
   return false;
 }
 function rollDrop(chance = 0.35){
@@ -1170,7 +1199,9 @@ function finish(lost, msg){
   over = true; stopChallenge(); updateUI();
   lastWin = !lost; lastDrop = null;
   const firstClear = levelMode != null && !lost && levelMode >= lvCur;     // collectibles drop only the first time a level is cleared
-  stats.streak = lost ? 0 : stats.streak + 1; saveStats();
+  stats.streak = lost ? 0 : stats.streak + 1;
+  if (!lost){ stats.wins++; stats.arrows += total; if (players.length === 1 && players[0].hearts >= 3) stats.perfect++; }
+  touchDay(); saveStats();
   if (firstClear){ lvCur = levelMode + 1; store.set(chal ? 'arrow-chal' : 'arrow-level', lvCur); }
   if (!lost && !awardMilestone() && firstClear) rollDrop(chal ? 0.7 : 0.35);
   if (players.length === 1){
@@ -1425,13 +1456,15 @@ function applyTheme(){
 $('darkRow').onclick = () => { prefs.dark = !prefs.dark; savePrefs(); applyTheme(); renderProfile(); };
 $('vibRow').onclick = () => { prefs.vib = !prefs.vib; savePrefs(); renderProfile(); haptic(25); };
 $('sndRow').onclick = () => { prefs.snd = !prefs.snd; savePrefs(); renderProfile(); sfx('ok'); };
-$('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + ITEMS.length + '</h3><p style="text-align:center">Win levels for a chance to find exclusive items. Some are unlocked by milestones.</p><div id="cgrid"></div>', () => {
+$('collRow').onclick = () => openModal('<h3>Collection ' + owned.length + '/' + ITEMS.length + '</h3><p style="text-align:center">Win levels for a chance to find surprise badges. Reach goals to unlock the rest!</p><div id="cgrid"></div>', () => {
   ITEMS.forEach(i => {
     const got = owned.includes(i[0]), d = document.createElement('div');
     d.className = 'ci' + (got ? '' : ' no'); d.style.setProperty('--rc', RARITY[i[3]].c);
     d.innerHTML = '<b></b><small></small>';
     if (ART[i[0]]) d.firstChild.innerHTML = artSvg(i[0]); else d.firstChild.textContent = got ? i[1] : '?';
     d.lastChild.textContent = got ? i[2] : (i[4] || i[3]);
+    const m = MILE[i[0]];
+    if (m && !got){ const v = Math.min(m.g, m.v()); d.insertAdjacentHTML('beforeend', '<i class="pb"><u style="width:' + Math.round(100*v/m.g) + '%"></u></i><em>' + v + '/' + m.g + '</em>'); }
     $('cgrid').appendChild(d);
   });
 });
@@ -1607,7 +1640,7 @@ function applyEvent(ev){
     if (removed === total){
       over = true; updateUI();
       const me = role==='h' ? team.h : team.g, fr = role==='h' ? team.g : team.h;
-      lastDrop = null; stats.streak++; stats.online++; saveStats(); awardMilestone();
+      lastDrop = null; stats.streak++; stats.online++; stats.wins++; stats.arrows += total; touchDay(); saveStats(); awardMilestone();
       showEnd(true, 'Congratulations! You Won', '', 800);
       return setStatus(`Cleared together! You ${me} · Friend ${fr}. ${role==='h' ? 'Tap New for another board.' : 'Host can start the next one.'}`);
     }
@@ -1983,7 +2016,7 @@ function frame(now){
 { const s = store.get('arrow-settings', null); if (s){ $('diff').value = SIZES[s.diff] ? s.diff : 'Medium'; $('mode').value = '1'; } }
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
-const VERSION = '1.57.2'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.57.3'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
