@@ -61,7 +61,16 @@
   #bar{height:8px;background:#2a2d47;border-radius:4px;overflow:hidden}
   #bar i{display:block;height:100%;width:0;background:#8f98ff;transition:width .2s}
   #status{display:none}
-  #roomline{text-align:center;font-size:13px;opacity:.8;min-height:16px}
+  #roomline{text-align:center;font-size:13px;min-height:16px}
+  #roomline .rst{opacity:.75;display:block;margin-top:2px}
+  #roomline .rrow{display:flex;align-items:center;justify-content:center;gap:6px}
+  #roomline .rcode{font-size:15px;opacity:.9}
+  #roomline .rcode b{font-weight:800;letter-spacing:.14em;color:#c5c9ff;margin-left:2px}
+  #roomline .rbtn{width:30px;height:30px;padding:0;margin:0;border:0;border-radius:9px;background:rgba(165,172,255,.14);box-shadow:none;color:#a5acff;display:flex;align-items:center;justify-content:center}
+  #roomline .rbtn:active{background:rgba(165,172,255,.3)}
+  #roomline .rbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  #roomline .rbtn.ok{color:#7ae582}
+  html[data-theme=light] #roomline .rcode b{color:#4a55e0}
   #wrap{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
   canvas{display:block;touch-action:none}
   #lobby,#picker{position:fixed;inset:0;background:rgba(10,10,20,.85);display:flex;align-items:center;justify-content:center;z-index:20}
@@ -1565,6 +1574,23 @@ async function loadFirebase(){
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const makeCode = () => Array.from({length:5}, () => CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]).join('');
 const newSeed = () => Math.floor(Math.random()*2147483647);
+$('roomline').onclick = async e => {
+  const b = e.target.closest('.rbtn'); if (!b || !room) return;
+  haptic(10);
+  if (b.dataset.a === 'share'){
+    const text = 'Join my Arrow Escape game! Room code: ' + room;
+    try { if (navigator.share){ await navigator.share({title: 'Arrow Escape', text, url: location.href}); return; } } catch(err){ if (err && err.name === 'AbortError') return; }
+    return copyCode(b, text, 'Invite copied');
+  }
+  copyCode(b, room, 'Code copied');
+};
+async function copyCode(btn, text, msg){
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; }
+  catch(e){ try { const t = document.createElement('textarea'); t.value = text; t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); ok = document.execCommand('copy'); t.remove(); } catch(e2){} }
+  toast(ok ? msg : 'Could not copy');
+  if (ok){ btn.classList.add('ok'); setTimeout(() => btn.classList.remove('ok'), 1200); }
+}
 const lmsg = t => $('lmsg').textContent = t;
 
 async function createRoom(){
@@ -1599,7 +1625,11 @@ function enterRoom(f){
   roomUnsubs.push(f.onValue(f.ref(f.db, `rooms/${room}/players`), s => {
     const p = s.val() || {};
     const other = role==='h' ? p.g : p.h;
-    $('roomline').textContent = `Room ${room} · ${other ? 'Friend online' : (role==='h' ? 'Share this code, waiting for friend…' : 'Waiting for host…')}`;
+    const st = other ? 'Friend online' : (role==='h' ? 'Share this code, waiting for friend…' : 'Waiting for host…');
+    $('roomline').innerHTML = '<div class="rrow"><span class="rcode">Room <b>' + room + '</b></span>' +
+      '<button class="rbtn" data-a="copy" aria-label="Copy room code"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.500"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button>' +
+      '<button class="rbtn" data-a="share" aria-label="Share room code"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.600"/><circle cx="6" cy="12" r="2.600"/><circle cx="18" cy="19" r="2.600"/><path d="M8.300 10.800L15.700 6.200M8.300 13.200L15.700 17.800"/></svg></button></div>' +
+      '<span class="rst">' + st + '</span>';
   }));
   roomUnsubs.push(f.onValue(f.ref(f.db, `rooms/${room}/meta`), s => {
     const m = s.val();
@@ -1631,6 +1661,13 @@ function onlineTap(a){
   hintId = -1;
   if (!a.alive || a.red) return;
   if (role === 'h') hostProcess(a.id, 'h');
+  else if (a.special || canExit(a)){
+    // Free arrow: the friend writes the move straight to the shared list, so it shows at once on this phone
+    // (Firebase fires the local write instantly) and reaches the host in one hop instead of two. A free arrow
+    // can never become blocked later, so no referee is needed. Blocked taps still go through the host.
+    const ev = {id:a.id, ok:true, by:'g'};
+    fb.push(fb.ref(fb.db, gameBase+'/events'), ev).catch(() => fb.push(fb.ref(fb.db, gameBase+'/taps'), {id:a.id, by:'g'}));
+  }
   else fb.push(fb.ref(fb.db, gameBase+'/taps'), {id:a.id, by:'g'});
 }
 
@@ -1638,14 +1675,12 @@ function hostProcess(id, by){
   if (over) return;
   const a = arrows[id];
   if (!a || !a.alive || a.red) return;
-  const ev = {n: applied+1, id, ok: a.special ? true : canExit(a), by};
+  const ev = {id, ok: a.special ? true : canExit(a), by};
   applyEvent(ev);
   fb.push(fb.ref(fb.db, gameBase+'/events'), ev);
 }
 
 function applyEvent(ev){
-  if (ev.n <= applied) return;
-  applied = ev.n;
   const a = arrows[ev.id];
   if (!a || !a.alive) return;
   if (ev.ok){
@@ -2032,7 +2067,7 @@ function frame(now){
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
 homeInfoCycle(!$('home').hidden);
-const VERSION = '1.57.6'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.58.1'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
