@@ -191,7 +191,7 @@ If the change touches online logic or board generation, **both phones** need the
 
 ## Credits
 
-Designed and built by **Junaid Alam** (Zunaid).
+Designed and built by **Junaid Alam**.
 Hosted on GitHub Pages · Online play powered by Firebase Realtime Database.
 
 <div align="center">
