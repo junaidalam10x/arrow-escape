@@ -934,7 +934,7 @@ function genDense(n, rng, cfg, mask){
         if (!best || path.length > best.length) best = path;
       }
       if (best && best.length >= floor){
-        const a = {id:all.length, path:best, dx:0, dy:0, alive:true, fresh:true, keep:true, tc:{longBias:0.9, straight:0.6, minLen:2, maxLen:6}};
+        const a = {id:all.length, path:best, dx:0, dy:0, alive:true, fresh:true, keep:true, tc:{longBias:0.03, straight:0.6, minLen:2, maxLen:6}};
         all.push(a); best.forEach(([x,y]) => own[y*n+x] = a.id);
       }
     }
@@ -1084,7 +1084,7 @@ function loadBoard(g){
 function removeSpecial(sp){
   const want = 4 + (sp.id % 2);
   const dist = b => { let m = 1e9; for (const [x1,y1] of sp.path) for (const [x2,y2] of b.path){ const v = Math.abs(x1-x2) + Math.abs(y1-y2); if (v < m) m = v; } return m; };
-  const near = arrows.filter(b => b.alive && b !== sp).map(b => [dist(b), b.id, b]).sort((p,q) => p[0]-q[0] || p[1]-q[1]).slice(0, want).map(t => t[2]);
+  const near = arrows.filter(b => b.alive && b !== sp && canExit(b)).map(b => [dist(b), b.id, b]).sort((p,q) => p[0]-q[0] || p[1]-q[1]).slice(0, want).map(t => t[2]);
   const all = [sp, ...near];
   all.forEach((b, i) => removeArrow(b, i * 110));
   return all.length;
@@ -2134,7 +2134,7 @@ function frame(now){
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
 homeInfoCycle(!$('home').hidden);
-const VERSION = '1.58.5'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.58.6'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
