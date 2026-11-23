@@ -1,39 +1,22 @@
 {
+  "id": "/arrow-escape/",
   "name": "Arrow Escape",
-  "short_name": "Arrows",
+  "short_name": "Arrow Escape",
+  "description": "Slide every arrow out of the maze before you run out of hearts. Solo levels, timed challenges and online two-player co-op.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait",
   "background_color": "#1d1f2e",
   "theme_color": "#1d1f2e",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["games", "puzzle", "entertainment"],
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
-  ],
-  "orientation": "portrait",
-  "display_override": [
-    "fullscreen",
-    "standalone"
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
