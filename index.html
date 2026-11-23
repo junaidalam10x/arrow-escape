@@ -11,7 +11,18 @@
 <meta name="application-name" content="Arrow Escape">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Arrow Escape</title>
+<title>Arrow Escape – Free Arrow Puzzle Game</title>
+<meta name="description" content="Arrow Escape is a free arrow-escape puzzle game. Slide every arrow out of the maze, race the clock, or play online co-op with a friend. Works offline, no download needed.">
+<meta name="keywords" content="arrow escape, arrow puzzle, puzzle game, maze game, co-op game, offline game, html5 game">
+<link rel="canonical" href="https://junaidalam10x.github.io/arrow-escape/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Arrow Escape">
+<meta property="og:title" content="Arrow Escape – Free Arrow Puzzle Game">
+<meta property="og:description" content="Slide every arrow out of the maze before you run out of hearts. Solo, timed challenges and online co-op.">
+<meta property="og:url" content="https://junaidalam10x.github.io/arrow-escape/">
+<meta property="og:image" content="https://junaidalam10x.github.io/arrow-escape/icon-512.png">
+<meta name="twitter:card" content="summary">
+<meta name="google-site-verification" content="EX7cMoxbVDOnpQHLyZAmaRI6idBH6P2R5oZ1dRsxNGo" />
 <script>try{if(JSON.parse(localStorage.getItem("arrow-prefs")).dark===false)document.documentElement.dataset.theme="light"}catch(e){}</script>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
@@ -2136,7 +2147,7 @@ function frame(now){
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
 homeInfoCycle(!$('home').hidden);
-const VERSION = '1.58.7'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.58.9'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
