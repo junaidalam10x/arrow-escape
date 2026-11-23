@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://junaidalam10x.github.io/arrow-escape/sitemap.xml
