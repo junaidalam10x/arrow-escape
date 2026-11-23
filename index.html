@@ -7,6 +7,8 @@
 <meta name="theme-color" content="#1d1f2e" id="tc">
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-title" content="Arrow Escape">
+<meta name="application-name" content="Arrow Escape">
 <link rel="icon" href="icon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Arrow Escape</title>
@@ -2134,7 +2136,7 @@ function frame(now){
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
 homeInfoCycle(!$('home').hidden);
-const VERSION = '1.58.6'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.58.7'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
