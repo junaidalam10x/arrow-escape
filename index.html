@@ -1235,7 +1235,7 @@ function tap(a){
   if (room) return onlineTap(a);
   hintId = -1;
   if (a.red) return;                       // already blocked, waiting for its way to clear
-  if (a.special){
+  if (a.special && canExit(a)){
     const n = removeSpecial(a); sfx('win'); haptic([30,40,30]);
     players[turn].score += n;
     sweepRed(b => players[b.by].score++);
@@ -1718,7 +1718,7 @@ function onlineTap(a){
   hintId = -1;
   if (!a.alive || a.red) return;
   if (role === 'h') hostProcess(a.id, 'h');
-  else if (a.special || canExit(a)){
+  else if (canExit(a)){
     // Free arrow: the friend writes the move straight to the shared list, so it shows at once on this phone
     // (Firebase fires the local write instantly) and reaches the host in one hop instead of two. A free arrow
     // can never become blocked later, so no referee is needed. Blocked taps still go through the host.
@@ -1732,7 +1732,7 @@ function hostProcess(id, by){
   if (over) return;
   const a = arrows[id];
   if (!a || !a.alive || a.red) return;
-  const ev = {id, ok: a.special ? true : canExit(a), by};
+  const ev = {id, ok: canExit(a), by};
   applyEvent(ev);
   fb.push(fb.ref(fb.db, gameBase+'/events'), ev);
 }
@@ -1811,14 +1811,7 @@ function handleTap(px, py){
       if (d < bd && d <= tol){ bd = d; id = occ[j*N+i]; }
     }
   }
-  if (id === -1){                                   // double-tap empty space: zoom in / back to fit
-    const now = performance.now();
-    if (lastEmpty && now-lastEmpty.t < 350 && Math.hypot(px-lastEmpty.x, py-lastEmpty.y) < 40){
-      if (Math.abs(view.s - 1) > 0.05 || Math.hypot(view.ox - (W-N*cs*view.s)/2, view.oy - (H-N*cs*view.s)/2) > 6){ view.s = 1; centerView(); clampView(); } else zoomAt(px, py, Math.min(maxScale(), 2.6));
-      lastEmpty = null;
-    } else lastEmpty = {t:now, x:px, y:py};
-    return;
-  }
+  if (id === -1) return;
   tap(arrows[id]);
 }
 
@@ -2141,7 +2134,7 @@ function frame(now){
 refreshPills();                                     // no board is built at launch: Home shows first, a board is made when you press Play
 requestAnimationFrame(frame);
 homeInfoCycle(!$('home').hidden);
-const VERSION = '1.58.4'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
+const VERSION = '1.58.5'; $('profver').textContent = 'Version ' + VERSION;   // bump on every release
 applyTheme();
 showScreen('home');
 (function(){
